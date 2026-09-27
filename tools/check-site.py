@@ -3,8 +3,12 @@
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlsplit,unquote
-import sys
-root=Path(__file__).resolve().parents[1]/'www'
+import sys,re
+project=Path(__file__).resolve().parents[1]
+root=project/'www'
+match=re.search(r'^  url: (https?://\S+)',(project/'antora-playbook.yml').read_text(),re.M)
+site=urlsplit(match[1] if match else '')
+prefix=site.path.rstrip('/')
 class Page(HTMLParser):
  def __init__(self):super().__init__();self.links=[];self.ids=set()
  def handle_starttag(self,tag,attrs):
@@ -20,8 +24,11 @@ if not pages:errors.append('No rendered HTML; run the build first')
 for p,data in pages.items():
  for link in data.links:
   u=urlsplit(link)
-  if u.scheme or u.netloc or not u.path and not u.fragment:continue
-  target=(root/u.path.lstrip('/') if u.path.startswith('/') else p.parent/u.path).resolve() if u.path else p
+  if (u.scheme or u.netloc) and u.netloc!=site.netloc:continue
+  if not u.path and not u.fragment:continue
+  path=u.path
+  if prefix and (path==prefix or path.startswith(prefix+'/')):path=path[len(prefix):] or '/'
+  target=(root/path.lstrip('/') if path.startswith('/') else p.parent/path).resolve() if path else p
   if target.is_dir():target=target/'index.html'
   if not target.exists():errors.append(f'{p.name}: missing {link}')
   elif u.fragment and target in pages and unquote(u.fragment) not in pages[target].ids:errors.append(f'{p.name}: missing fragment {link}')

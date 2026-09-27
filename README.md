@@ -1,5 +1,7 @@
 # ACM Fleet Operations workshop
 
+**[Open the workshop guide](https://rh-aelgendy.github.io/acm-fleet-workshop/)**
+
 An Antora/AsciiDoc participant guide using the Red Hat Showroom theme. Existing presenter guides and live cluster resources remain in the separate ACM demo repository. This is a draft for fresh-environment acceptance, not a universal installer.
 
 ## Read and build
@@ -51,4 +53,4 @@ Fresh-environment preparation still needs validation and generalization; the que
 
 The public source lives at [rh-aelgendy/acm-fleet-workshop](https://github.com/rh-aelgendy/acm-fleet-workshop). Pushes and pull requests build and validate the site and upload a short-lived `workshop-site` artifact. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-To publish the reviewed generic guide, select **Settings → Pages → Source: GitHub Actions**, then **Actions → Publish reviewed workshop → Run workflow** on `main`. The expected URL is `https://rh-aelgendy.github.io/acm-fleet-workshop/`; it is not live until Pages is enabled and that workflow succeeds. Publication uses only the generic playbook; ignored personalized profiles are not uploaded. Updates to main automatically rebuild the website once Pages is enabled.
+To publish the reviewed generic guide, select **Settings → Pages → Source: GitHub Actions**, then **Actions → Publish reviewed workshop → Run workflow** on `main`. The public website URL is `https://rh-aelgendy.github.io/acm-fleet-workshop/`. Publication uses only the generic playbook; ignored personalized profiles are not uploaded. Updates to main automatically rebuild the website once Pages is enabled.

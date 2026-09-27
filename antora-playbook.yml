@@ -1,4 +1,5 @@
 site:
+  url: https://rh-aelgendy.github.io/acm-fleet-workshop
   title: ACM Fleet Operations Workshop
   start_page: modules::index.adoc
 content:
