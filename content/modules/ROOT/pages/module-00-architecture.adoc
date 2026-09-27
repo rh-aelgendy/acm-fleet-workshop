@@ -1,0 +1,60 @@
+= Module 0: Understand the fleet architecture
+
+*Objective:* Explain which component owns a decision and which component performs the work. *Time:* 10 minutes. *Starting state:* the environment setup gates are recorded.
+
+include::partial$environment.adoc[]
+
+== Follow the control flow
+
+[source,text]
+----
+Platform intent on the hub
+  ├─ Cluster metadata → Placement → PlacementDecision
+  │                                  ├─ Policy placement → managed policy agent
+  │                                  └─ ApplicationSet → Argo Application → destination API
+  ├─ Search ← indexed resource state from managed clusters
+  └─ Observability ← supported collectors → central metrics/storage → dashboards
+
+Optional integrations
+  Custom request → ACM policy → ASO (Azure) or CAPA/CAPZ (planned provisioning)
+  Healthy app destinations → workshop gateway → customer HTTP requests
+----
+
+[cols="1,3",options="header"]
+|===
+|Object/component |Responsibility
+|ManagedCluster |Hub registration and status for a cluster; this alone does not grant every application permission
+|ManagedClusterSet |Groups fleet members for management and access delegation
+|ManagedClusterSetBinding |Makes a set available to Placements in a hub namespace
+|Placement |Selects eligible clusters from available sets and predicates
+|PlacementDecision |Controller-generated selected-cluster result; consumers use it, humans do not edit it
+|Policy / PlacementBinding |Describe desired controls and associate them with selection
+|Managed policy agent |Evaluates and, when authorized, reconciles configuration on its cluster
+|ApplicationSet / Argo CD |Generate Applications and reconcile Git content to destination APIs
+|ClusterPool |Hive inventory of provisioned clusters to claim; separate from CAPA and from a worker/node pool
+|===
+
+== Inspect the architecture in the console
+
+include::partial$ui-navigation.adoc[]
+
+. Open *ACM → Infrastructure → Clusters*. Find `{source-cluster}` and `{destination-cluster}` and confirm Available.
+. Inspect their ClusterSet membership. Record `{cluster-set}` and the actual locations `{source-region}` / `{destination-region}`.
+. On the hub, inspect a prepared Placement and its PlacementDecision in `{gitops-namespace}`. Explain intent versus current result.
+. Open *Governance* and *Applications*. Identify the controller responsible for each result.
+
+*Expected:* You can trace one selected cluster from metadata to a decision and its consumer. *Customer value:* A consistent operating model across locations. *Fallback:* If a component is absent, use the diagram and mark its lab blocked.
+
+== Production discussion
+
+Hub availability, backups and restore are separate from application data protection. Multiple hub nodes are not a cross-region hub DR plan. Test the supported ACM backup/restore procedure and separately protect application databases, identity dependencies, DNS and ingress. This workshop does not fail over a hub or replicate persistent volumes.
+
+Use the link:https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_management_for_kubernetes/2.17/html/business_continuity/index[ACM business continuity documentation] and your storage/provider support matrix for production design.
+
+== Checkpoint
+
+Explain why changing a PlacementDecision by hand is wrong, why green policy status is not application readiness, and which controller owns GitOps reconciliation.
+
+== Clean up or hand over
+
+No resources change in this module. Continue to xref:module-01-fleet.adoc[Discover the fleet].

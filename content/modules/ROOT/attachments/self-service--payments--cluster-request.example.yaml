@@ -1,0 +1,17 @@
+# Data-only example for a customer AAP job/portal form. Do not oc apply.
+# No cluster provisioning workflow is installed by this repository.
+team: payments
+owner_group: payments-developers
+platform: Azure Red Hat OpenShift
+purpose: payments-development
+azure_region: westeurope
+cost_center: EXAMPLE-1234
+network_profile: approved-private-network
+size_profile: approved-development
+requested_access: application-namespace-developer
+approval_required: true
+post_provisioning:
+  - import-into-acm
+  - assign-approved-team-scope
+  - apply-baseline-and-access-policies
+  - enable-reviewed-gitops-application

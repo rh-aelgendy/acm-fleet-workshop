@@ -1,0 +1,28 @@
+= Cleanup and ownership
+
+== Choose reset or teardown
+
+* *Reset* restores the exercise's opening state while retaining supporting infrastructure.
+* *Teardown* removes owned workshop resources and disposable data after the session.
+* Neither operation means deleting an existing managed cluster or uninstalling ACM.
+
+[cols="1,3,2",options="header"]
+|===
+|Module |Reset / teardown boundary |Verify
+|Fleet |Restore only labels changed by this workshop |Original set/selection retained
+|Governance |Reset scoped policy to Inform and restage only owned fixture; do not remove customer controls |Expected noncompliance, no unrelated changes
+|GitOps |Restore source production eligibility; review generated app lifecycle before cleanup |Baseline apps Healthy; preserved workloads handled explicitly
+|Mobility |Restore source-only gateway config with new revision; wait for healthy source responses before retirement |No routing to removed backend
+|Operations |Restore original canary command and reporting requests; retain historical metrics |Available replicas and new telemetry
+|Guardrails |Restore Warn+Audit only on owned binding; retain operator; reset owned certificate fixture |No removal of shared cert-manager or CRDs
+|Payments |Reset illustrative annotation drift; offboard only module-owned bindings/namespaces |No widening or accidental loss of team access
+|Azure access |Use reviewed staged withdrawal and ASO reconciliation before deleting controller inputs |Workload, identity, federation and scoped assignment retired as intended
+|Cluster provisioning |No resources created by the planned CAPA/CAPZ module |No cleanup action in this revision
+|Three-tier |Delete Application non-cascading, then dedicated namespace/data, then AppProject |Application, PVC/PV and namespace absent
+|===
+
+Detailed operating commands remain in the facilitator checkout; run their dry-run/validation modes first against the verified environment. Do not force-remove finalizers to hide an incomplete cloud or storage deletion.
+
+== Session close
+
+Record which resources remain, their owner and recurring costs. Operator installations, observability object storage and cloud identities can survive a namespace reset. Never describe a successful Kubernetes delete response as proof that all provider resources disappeared.

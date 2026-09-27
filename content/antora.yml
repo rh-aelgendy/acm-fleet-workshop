@@ -1,0 +1,21 @@
+name: modules
+title: ACM Fleet Operations
+version: ~
+nav:
+  - modules/ROOT/nav.adoc
+asciidoc:
+  attributes:
+    lab-name: "ACM Fleet Operations"
+    source-cluster: "SOURCE_MANAGEDCLUSTER"
+    destination-cluster: "DESTINATION_MANAGEDCLUSTER"
+    hub-context: "HUB_CONTEXT"
+    hub-api: "https://api.example.invalid:6443"
+    hub-console: "https://console.example.invalid"
+    source-region: "SOURCE_REGION"
+    destination-region: "DESTINATION_REGION"
+    cluster-set: "WORKSHOP_CLUSTERSET"
+    gitops-namespace: "openshift-gitops"
+    policy-namespace: "acm-demo-policies"
+    apps-repo: "https://github.com/rh-aelgendy/acm-applications-demo"
+    apps-revision: "main"
+    profile-name: "Unconfigured — complete Environment setup"

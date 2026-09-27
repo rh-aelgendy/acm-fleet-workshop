@@ -1,0 +1,25 @@
+= Module 1 — Discover the fleet and find workloads
+
+include::partial$environment.adoc[]
+
+*Time:* 5–10 minutes. Starting state: both clusters Available, labels and Search prepared.
+
+**Objective of this lab/demo:** Locate an application and its health across clusters without opening every cluster first.
+
+. Open **Infrastructure → Clusters**. Inspect availability, version and ownership for both clusters.
+. Open each cluster's **Labels**. Point to `demo.acm.example.com/environment`, `azure-region`, `owner`, `business-unit` and `criticality`. These labels express business intent and later drive selection.
+. Open **Search**. Enter `namespace:acm-demo-prod`. Open a Deployment result and follow its related Pods and Services.
+. Search `kind:Deployment namespace:acm-demo-mobility` to find the source application.
+. Use the xref:appendix-search.adoc[search query card] to look for unhealthy Pods and Nodes. Select actual production cluster names using Search autocomplete; cluster labels are not inherited by every Pod.
+
+**Say:** “We start with the fleet and narrow down to the affected resource. The same cluster metadata will drive our policies and applications.”
+
+**Expected:** Both clusters are Available; application resources appear. An empty unhealthy-node result is healthy behavior. **Customer value:** Faster inventory and investigation. **Fallback:** Open the cluster overview and indexed resource details; allow Search time to index changes. Do not manufacture a worker failure.
+
+== Checkpoint
+
+Record the observed cluster selection and health/compliance result. Explain which controller changed which object.
+
+== Clean up or hand over
+
+Continue to the next selected module, or follow xref:appendix-cleanup.adoc[Cleanup and ownership].

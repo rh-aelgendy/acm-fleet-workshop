@@ -1,0 +1,67 @@
+= Module 7 — Onboard Payments within platform boundaries
+
+include::partial$environment.adoc[]
+
+**Objective of this lab/demo:** Show how ACM assigns an existing fleet cluster to a team, maintains its namespace controls and centrally corrects workload-identity configuration drift.
+
+**Time:** 8–10 minutes. **Personas:** platform administrator and Payments developer. **Starting state:** Payments prepared on `{destination-cluster}`; baseline Compliant, application Healthy, identity policy Inform/NonCompliant. Preparation and cleanup are in the xref:appendix-facilitator.adoc[facilitator runbook].
+
+This session uses the presenter's administrator login to inspect the design. A real developer console login requires configured IdP groups and tested console permissions; that integration is not currently demonstrated. Admin access and hidden menus do not prove tenant isolation. Restricted-token API tests from rehearsal are supporting evidence, not a live human-login claim.
+
+== 1. Show the team's allocation
+
+Open **ACM → Infrastructure → Clusters → {destination-cluster} → Labels** and point to `demo.acm.example.com/payments=true`. In the **hub API Explorer**, inspect the Placement and its PlacementDecision in namespace `acm-demo-payments`.
+
+**Say:** “This existing cluster is allocated to Payments. The platform controls which cluster is eligible; the team does not choose arbitrary destinations.”
+
+**Expected:** Only the approved spoke is selected. **Value:** Repeatable allocation within fleet controls. **Fallback:** Inspect the Placement YAML and cluster labels if the decision view is delayed. The xref:attachment$self-service--payments--cluster-request.example.yaml[cluster-request example] is an illustrative contract, not a working ARO creation API. Cluster provisioning is reserved for the planned CAPA/CAPZ module.
+
+== 2. Inspect the centrally maintained boundaries
+
+Open **Governance → Policies → payments-team-baseline**, namespace `acm-demo-payments`. Inspect spoke results and related ResourceQuota, LimitRange, NetworkPolicies, Role and RoleBinding for `acm-demo-payments`.
+
+If accessible, follow the cluster console to that project's **User Management → Roles / RoleBindings** or API Explorer. Read the actual verbs, resource types and subjects. Explain which controller owns each resource.
+
+**Say:** “The platform defines the team's resource budget and access rules centrally. Developers manage permitted application resources in their namespace; they do not change quotas, identity bindings or cluster-wide controls.”
+
+**Expected:** Compliant baseline and bounded namespace rules. **Value:** Delegation without cluster-admin. **Fallback:** Show related-object YAML. Do not broaden permissions merely to make a console page visible. Exact-name hub API permissions do not imply access to fleet-wide console listing.
+
+== 3. Show application delivery within the boundary
+
+Open **ACM → Applications → payments-{destination-cluster} → Argo CD**. Inspect destination `acm-demo-payments`, public source path `payments`, and the resource tree. In Argo CD, open **Settings → Projects → acm-demo-payments** and inspect the repository, destination and resource-kind allowlists.
+
+**Say:** “ACM selects the cluster; GitOps delivers the reviewed application. The platform controls where and what this project can deploy.”
+
+**Expected:** payments-api Synced / Healthy. **Value:** Developers consume a prepared deployment path. **Fallback:** Inspect sync conditions and the generated Application. Do not manually deploy a second workload and present it as ACM/GitOps delivery.
+
+This sample uses synthetic data and does not process payments or call Azure. Git repository permissions and branch protection are separate controls. The central Argo controller is shared and trusted; this is not a separate-controller-per-tenant architecture.
+
+== 4. Detect identity configuration drift
+
+Open **Governance → payments-workload-identity → {destination-cluster} → violation details**. Inspect desired ServiceAccount `payments-runtime` in `acm-demo-payments` and its missing approved client-ID annotation.
+
+**Say:** “ACM reports where the workload identity configuration differs from the platform contract.”
+
+**Expected:** Inform / NonCompliant while the application stays healthy. **Value:** Central drift visibility. **Fallback:** Inspect the desired and related objects; if already Compliant, explain that the prerequisite reset was not performed rather than removing a live identity during the session.
+
+This isolated example uses a nonfunctional all-zero client ID. A compliant annotation does not prove an Azure identity, federation or role assignment exists.
+
+== 5. Remediate from ACM
+
+Choose **payments-workload-identity → Actions → set remediation to Enforce**. If unavailable, edit the root Policy YAML and set `spec.remediationAction: enforce` (and its embedded ConfigurationPolicy remediationAction to the same value). Save without changing the approved identity value or scope.
+
+Watch per-cluster status become **Compliant**, then inspect the ServiceAccount annotation through related resources or the managed-console API Explorer.
+
+**Say:** “The platform owner authorizes the correction once; ACM applies it on the selected cluster. This is configuration remediation. Next we will show the full Azure dependency chain.”
+
+**Expected:** Annotation restored; app and baseline remain healthy. **Value:** Central, scoped remediation. **Fallback:** Inspect ConfigurationPolicy messages and cluster availability. Do not claim Azure access was established.
+
+Continue with xref:module-08-azure-access.adoc[approved Azure access], which provisions and verifies a real identity. Repeat-session reset and offboarding are backstage activities in the facilitator runbook.
+
+== Checkpoint
+
+Record the selected cluster, observed status and any skipped step in your session notes. A saved object or green policy alone does not prove every dependency is ready.
+
+== Clean up or hand over
+
+Follow xref:appendix-cleanup.adoc[Cleanup and ownership] for this module. Do not remove shared operators or another participant’s resources.

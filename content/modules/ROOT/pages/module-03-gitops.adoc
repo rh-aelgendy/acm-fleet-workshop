@@ -1,0 +1,61 @@
+= Module 3 — Deploy by fleet intent with GitOps
+
+include::partial$environment.adoc[]
+
+*Time:* 10–15 minutes. Starting state: development/production Applications Healthy, registration and Placement integration prepared.
+
+**Objective of this lab/demo:** Add a deployment destination by changing cluster metadata, with GitOps providing the application definition.
+
+**Introduction:** “ACM selects where the application belongs. The hub's Argo CD reconciles what Git says should run. A pull architecture moves that reconciliation into each managed cluster.”
+
+[cols="1,1,1",options="header"]
+|===
+|
+|Push — this demo
+|Pull — discussion
+
+|Deployment controller
+|Central Argo CD on the hub
+|Argo CD on each managed cluster
+
+|ACM's role
+|Select clusters for generated Applications
+|Select clusters and distribute Application definitions
+
+|Useful when
+|A central platform team manages connected clusters
+|Reconciliation and responsibilities need to be distributed
+
+|Connectivity
+|Hub controller accesses destination APIs
+|Local controller accesses its API; ACM and Git connectivity are still required
+
+|Operational trade-off
+|Fewer controllers, central permissions
+|More controllers, local execution
+
+|===
+
+
+Both models read desired configuration from Git. Automatic versus manual sync is a separate choice. Only push is deployed in this workshop.
+
+. Open **ACM → Applications → retail-development-{source-cluster} → Argo CD**. Inspect Git source, destination and automatic sync. Development has one replica per service.
+. Open `retail-production-{destination-cluster}`. Production has two replicas and manual synchronization. Both use the public link:https://github.com/rh-aelgendy/acm-applications-demo[application repository]; the private presenter repository is not a runtime source.
+. In the **hub** API Explorer, open `Placement` → namespace `{gitops-namespace}` → `retail-production`. Show the selector `demo.acm.example.com/retail-prod=true`.
+. Return to **ACM → Infrastructure → Clusters → {source-cluster} → Labels**. Set `demo.acm.example.com/retail-prod` to `true` and save.
+. In the hub API Explorer, list `PlacementDecision` in `{gitops-namespace}`, filtered by `cluster.open-cluster-management.io/placement=retail-production`. Its decision list should now include both clusters. Do not edit this generated result.
+. Return to **ACM → Applications**. Open the newly generated `retail-production-{source-cluster}` → **Argo CD → Sync → Synchronize**, leaving prune disabled. Wait for **Synced / Healthy** and inspect its resource tree.
+
+**Say:** “One cluster label expanded the deployment. We did not edit a static cluster list or copy the application by hand.”
+
+**Expected:** Production retail runs on both selected clusters after sync. **Customer value:** Repeatable application distribution as the fleet grows. **Fallback:** Inspect ApplicationSet `retail-production` conditions and its PlacementDecision. If the Application exists but is not healthy, inspect Argo's sync result instead of applying workloads manually.
+
+Continue to xref:module-04-mobility.adoc[lab 4: mobility], then xref:module-05-operations.adoc[lab 5: operations].
+
+== Checkpoint
+
+Record the observed cluster selection and health/compliance result. Explain which controller changed which object.
+
+== Clean up or hand over
+
+Continue to the next selected module, or follow xref:appendix-cleanup.adoc[Cleanup and ownership].

@@ -1,0 +1,7 @@
+[NOTE]
+.Environment: {profile-name}
+====
+Use ManagedCluster identities `{source-cluster}` and `{destination-cluster}`.
+GitOps namespace: `{gitops-namespace}`. Policy namespace: `{policy-namespace}`.
+Names in this guide must match the prepared resources. Rendering a profile changes the instructions; it does not install or rename cluster resources.
+====

@@ -1,0 +1,58 @@
+= ACM Fleet Operations Workshop
+
+A growing organization has clusters in several locations. Its platform team needs one place to discover workloads, apply controls, choose deployment destinations and investigate failures. Payments developers need a bounded way to request applications and cloud access.
+
+This workshop follows that story using Red Hat Advanced Cluster Management (ACM), OpenShift GitOps and optional cloud integrations. You make decisions in the ACM and OpenShift consoles, inspect the resulting YAML and verify controller outcomes.
+
+[IMPORTANT]
+.Portability status: working draft for fresh-environment rehearsal
+====
+The underlying demos were exercised on one ARO fleet. This new participant guide is parameterized, but a clean-room installation on another fleet has not yet passed acceptance. Two clusters are the starting point, not proof that every lab dependency is installed. Complete xref:appendix-setup.adoc[Environment setup] and select only modules whose entry gates pass.
+====
+
+== Learning outcomes
+
+* Explain hub/agent responsibilities, cluster sets and placement decisions.
+* Find a workload across the fleet and distinguish availability from compliance.
+* Enforce a namespace baseline and demonstrate a local admission rejection.
+* Deploy applications with central Argo CD push reconciliation and dynamic ACM selection.
+* Prepare a second destination, inspect controls and move stateless demo traffic.
+* Investigate a failure and discuss resource requests using observed metrics.
+* Explain bounded team delegation and the cloud-specific dependencies of self-service.
+
+== Choose your path
+
+[cols="2,3,1",options="header"]
+|===
+|Path |Modules |Participant time
+|Fleet operations |0–5 |70–90 min
+|Governance and teams |0–2, 6–7 |60–75 min
+|Application delivery |0–1, 3–4, 10 |60–75 min
+|Azure self-service extension |7–8, after separate preparation |30–45 min plus propagation
+|===
+
+These times include hands-on pauses and exclude operator installation, data collection and cloud provisioning. A rehearsed presenter can run the core story in 45–55 minutes. Every module has an objective, opening state, UI actions, expected evidence, business value and a fallback.
+
+== Before you start
+
+. Complete xref:appendix-setup.adoc[Environment setup] with your facilitator.
+. Read xref:module-00-architecture.adoc[Module 0: architecture and ownership].
+. Use xref:module-01-fleet.adoc[Module 1: fleet discovery] as your first console exercise.
+
+include::partial$environment.adoc[]
+
+== What this workshop does not assume
+
+A second region does not change the placement model, but latency, egress, quotas, storage and connectivity still matter. An AKS cluster is not interchangeable with OpenShift for labs that need Routes, SCCs, OLM, GitOps integration or supported observability collectors. Consult xref:appendix-compatibility.adoc[Compatibility and module gates].
+
+The mobility gateway is workshop integration, not native ACM traffic management. The three-tier database demonstrates local persistence, not storage replication. Cloud request contracts are custom examples, not a built-in ACM service catalog.
+
+== Guide conventions
+
+* *Action*: perform a named console operation in the stated cluster and namespace.
+* *Expected*: verify observable evidence before advancing.
+* *Value*: explain the customer outcome.
+* *Fallback*: complete the safe subset or record the blocker; do not claim success.
+* *Checkpoint*: capture the selected scope and result without credentials.
+
+This is a community workshop, not an official product certification or support statement. The structure uses Antora/AsciiDoc and the Showroom theme, following the link:https://github.com/rh-mobb/snakewell[Snakewell workshop] example. Product support is determined by the applicable Red Hat support matrix.

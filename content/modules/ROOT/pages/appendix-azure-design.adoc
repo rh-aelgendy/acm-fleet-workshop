@@ -1,0 +1,83 @@
+= Approved access — facilitator and implementation reference
+
+Read this outside the stakeholder walkthrough. xref:module-08-azure-access.adoc[Return to the UI lab].
+
+== What is platform-owned
+
+[source,mermaid,subs="attributes+"]
+----
+flowchart LR
+  Team[Payments developer] --> Request[3-field approved request]
+  RBAC[Namespace RBAC + admission] --> Request
+  Request --> Policy[ACM policy on local hub]
+  Policy --> ASO[ASO: identity + federation + grant]
+  ASO --> Azure[Dedicated Azure resources]
+  ASO --> IDs[Public IDs + Ready conditions]
+  IDs --> WorkloadPolicy[ACM workload policy]
+  WorkloadPolicy --> Spoke[Spoke SA + reader workload]
+  Spoke --> Allowed[Payments container: 200]
+  Spoke --> Denied[Other-team container: 403]
+----
+
+
+The readable xref:attachment$self-service--approved-access--aso-resources.example.yaml[ASO YAML example] shows the identity, federation and scoped grant together. The live resources substitute discovered values for the example placeholders.
+
+The request is declarative and pre-approved by its template. There is no human
+approval queue in this demo. Production can put a portal, pull-request review or
+workflow engine in front of the same controlled API. This is a composed example,
+not a packaged ACM self-service portal or regulatory certification.
+
+The existing Payments sandbox and its illustrative identity policy remain separate.
+The real Azure proof runs in `acm-demo-payments-cloud`, with a dedicated service
+account. The team can view its pods/logs but cannot edit its identity, network
+controls or probe. Existing Payments application deployment permissions are unchanged.
+
+The operator is a trusted platform controller. It watches only the catalog
+namespace. Developers cannot create ASO resources there, edit ACM policies, change
+placements, grant RBAC, read the operator configuration, or select arbitrary cloud
+permissions. Its Azure identity has Managed Identity Contributor only on the new
+resource group, plus Role Based Access Control Administrator on the **Payments
+container only**, with an Azure condition permitting only Storage Blob Data Reader
+role assignments. A production design should separately review trusted-controller
+permissions, scope, network restrictions, admission and audit retention.
+
+== Dependencies, boundaries and teardown
+
+* Existing ACM governance, local managed hub, allocated spoke, Payments RBAC and ACM proxy access.
+* Existing cert-manager on the hub. ASO **2.21.1**, installed from the pinned,
+  checksum-verified upstream Helm chart; its image is
+  `mcr.microsoft.com/k8s/azureserviceoperator:v2.21.1`. This is an upstream ASO
+  integration; do not imply Red Hat product support for it without checking the customer's support agreements.
+* Helm, Azure CLI, PyYAML and authenticated hub CLI. Bootstrap Azure privileges must
+  cover creating the dedicated group/storage/identities and assigning the two scoped roles.
+* Both clusters must already have HTTPS OIDC service-account issuers. The spoke
+  needs Azure Workload Identity admission injection. The demo discovers issuers;
+  it does not modify ARO authentication, cluster infrastructure or platform upgrades.
+* ASO CRDs: managedidentity `v1api20230131` and authorization `v1api20220401`.
+  APIs and manifests are validated against the running servers before use.
+* Egress to MCR, the digest-pinned UBI registry, Microsoft login and Blob endpoints.
+  The probe permits DNS and HTTPS egress in its dedicated namespace. For production,
+  replace this demo's broad HTTPS allowance with the customer's reviewed egress controls.
+* One isolated Standard_LRS StorageV2 account, two private synthetic-data containers
+  and supporting identities. Normal Azure storage/transaction and cluster compute charges apply.
+  Bootstrap uses a storage key only in process memory/environment to seed synthetic
+  blobs, then disables shared-key access. Runtime workloads use federation exclusively.
+* **Cluster-scoped changes:** upstream ASO CRDs, ClusterRoles/Bindings and webhooks;
+  request ValidatingAdmissionPolicy/Binding. The existing cert-manager is reused.
+* Generated certificates remain Kubernetes Secrets. Tokens, kubeconfigs, storage
+  keys and generated secrets are never committed. Ignored `.state/` retains public
+  resource identifiers and ownership records for replay/cleanup.
+
+`./scripts/teardown-access-request.sh --dry-run` previews full removal.
+`./scripts/teardown-access-request.sh` withdraws the request, waits for ASO cleanup,
+then removes this module's isolated Azure resource group and operator installation.
+It refuses resources without demo ownership. Do not place other applications or
+customer data in the demo resource group or its namespaces. Azure authorization
+revocation and issued-token propagation are not instantaneous; this is lifecycle
+cleanup, not a claim of immediate revocation of every cached token.
+
+Official references: link:https://azure.github.io/azure-service-operator/guide/authentication/[ASO authentication],
+link:https://azure.github.io/azure-service-operator/reference/managedidentity/v1api20230131/[ASO managed identities],
+link:https://azure.github.io/azure-service-operator/reference/authorization/v1api20220401/[ASO role assignments],
+link:https://learn.microsoft.com/en-us/azure/role-based-access-control/delegate-role-assignments-examples[conditional Azure role delegation],
+link:https://open-cluster-management.io/docs/getting-started/integration/policy-controllers/policy/[ACM policy template concepts].

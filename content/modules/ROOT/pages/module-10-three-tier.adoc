@@ -1,0 +1,142 @@
+= Bonus GitOps lab — deploy Retail Orders from scratch
+
+include::partial$environment.adoc[]
+
+**Objective of this lab/demo:** Create one Argo CD push Application through the hub UI and watch it deliver a working three-tier application, including a persistent database and cluster-generated credentials.
+
+**Time:** 10–15 minutes, allowing extra time for the first image pulls, Python dependency download and disk provisioning. **Starting state:** no `retail-orders` Application, no `retail-orders-demo` namespace and no AppProject `retail-orders`. The source is in the public link:https://github.com/rh-aelgendy/acm-applications-demo/tree/main/retail-orders[application repository].
+
+The existing ACM/GitOps installation is reused. This lab targets the hub's own cluster using its native Argo CD connection; it is a **push Application**, not an ApplicationSet/Placement demonstration. The preceding placement lab shows dynamic fleet selection. The three-tier application is separate from the existing mobility storefront and Payments workload.
+
+== 1. Explain the application
+
+**Say:** “An application is more than a Deployment. This order flow needs a frontend, API, database, storage, configuration, permissions and network controls. GitOps delivers them together.”
+
+[cols="1,1,1",options="header"]
+|===
+|Tier
+|Kubernetes resources
+|Purpose
+
+|Storefront
+|Deployment, Service, ConfigMap, HTTPS Route
+|Catalog, basket and order history
+
+|Orders API
+|Deployment, Service, ConfigMap, service account
+|Validate items and calculate totals server-side
+
+|PostgreSQL
+|StatefulSet, Service, PVC, generated Secret
+|Persist synthetic orders
+
+|Controls
+|NetworkPolicies, bootstrap Role/RoleBinding, transient Job
+|Tier isolation and credentials generated in-cluster
+
+|===
+
+
+**Expected/value:** Audience sees a connected application rather than a single test Pod. **Fallback:** Show the public repository's `base/resources.yaml` and Kustomization.
+
+== 2. Prepare the application boundary in the hub UI
+
+Open **hub local OpenShift console → + → Import YAML**. Paste the two documents in link:https://github.com/rh-aelgendy/acm-applications-demo/blob/main/retail-orders/platform/prerequisites.yaml[prerequisites.yaml]. They create the dedicated Namespace and AppProject; this does not deploy the application.
+
+The namespace's `argocd.argoproj.io/managed-by: {gitops-namespace}` label lets the existing OpenShift GitOps operator prepare namespace-scoped access. In **User Management → RoleBindings**, namespace `retail-orders-demo`, verify the application-controller binding appears. Inspect AppProject `retail-orders` in namespace `{gitops-namespace}`: only the public repo, this namespace/destination and the required resource kinds are allowed.
+
+**Say:** “The platform first defines where GitOps may deploy and what it may manage.”
+
+**Expected:** Empty app namespace, scoped Argo project and controller permissions. **Value:** A visible deployment boundary. **Fallback:** If objects already exist, stop and inspect ownership; do not overwrite another session or claim this is an empty start. Missing GitOps permissions must be resolved before sync.
+
+== 3. Create the push Application
+
+Use **hub + → Import YAML** with link:https://github.com/rh-aelgendy/acm-applications-demo/blob/main/retail-orders/platform/application.yaml[application.yaml]. This is a standard Argo CD Application CR. Alternatively use the Argo CD **New App** form with the same values:
+
+[cols="1,1",options="header"]
+|===
+|Field
+|Value
+
+|Name / project
+|`retail-orders` / `retail-orders`
+
+|Repository
+|`https://github.com/rh-aelgendy/acm-applications-demo.git`
+
+|Revision / path
+|`main` / `retail-orders`
+
+|Destination server
+|`https://kubernetes.default.svc`
+
+|Namespace
+|`retail-orders-demo`
+
+|Sync policy
+|Manual; prune disabled
+
+|===
+
+
+Return to **ACM → Applications**, find `retail-orders`, and follow its **Argo CD** link. If the ACM listing has not indexed it, open the existing Argo CD console directly and return to ACM after discovery.
+
+**Say:** “The hub controller reads a public Git source and pushes the desired resources to its configured destination. The source remains available even though our facilitator repository is private.”
+
+**Expected:** Application visible, initially OutOfSync/Missing. **Value:** Central application inventory with GitOps execution. **Fallback:** Inspect Application conditions in hub API Explorer. This YAML path is the reliable creation method; it does not depend on an ACM release exposing a particular creation wizard.
+
+== 4. Synchronize and read the resource tree
+
+Choose **Argo CD → Sync → Synchronize**, with prune disabled. Watch the sync operation:
+
+. ConfigMaps, bootstrap RBAC and service accounts appear.
+. A Sync hook generates the credential Secret once. The completed hook is removed after success.
+. PostgreSQL starts with its PVC.
+. The API becomes ready after connecting to the database.
+. The storefront and Route become healthy.
+
+**Say:** “Dependency readiness matters. The API does not become ready merely because its process started; it verifies the database. Database credentials never came from Git.”
+
+**Expected:** Synced / Healthy; 21 declared objects including the transient Job, plus the generated Secret and runtime Pods/PV. **Value:** Desired state and deployment evidence in one resource tree. **Fallback:** Inspect hook/Pod events and sync messages for registry, PyPI, RBAC or storage errors. Do not open Secret YAML or manually bypass a failed tier.
+
+== 5. Use the application
+
+Open **hub → Networking → Routes → retail-orders-demo → retail-orders → Location**. In Fieldnotes, add products, submit a demo order and open **Order history**. Open **Platform view** to show database connectivity, saved-order count and the serving API Pod.
+
+**Say:** “This is a real database write through all three tiers. It uses synthetic products and collects no payment or personal details.”
+
+**Expected:** A confirmed order with a total and stable ID appears in history. **Value:** A tangible business workflow. **Fallback:** A failed request is not a completed order; keep the same basket and retry. The API uses the same request ID for retries to avoid duplicate orders.
+
+== 6. Demonstrate persistence
+
+Record the order ID. In **hub → Workloads → Pods → retail-orders-demo**, select only the Pod owned by `orders-api` and delete it. Wait for its Deployment to replace it and become Ready. Refresh order history; the same order remains. Platform view reports the new API Pod.
+
+**Say:** “The API is replaceable. Its state lives in PostgreSQL on persistent storage.”
+
+**Expected:** The order survives API replacement. **Value:** Explain stateless application tiers versus stateful storage. **Fallback:** Wait for the replacement's init container and readiness; a brief outage is possible with one API replica. Do not delete the PVC. PostgreSQL replacement was also tested separately, but this is not a production database HA or DR demonstration.
+
+== 7. Explain repeat sync and cleanup
+
+Optionally sync again. The credential hook retains the existing Secret and the database retains orders. This differs from a clean reinstall.
+
+After the discussion, remove the disposable lab through the UI:
+
+. Delete `retail-orders` Application **non-cascading**, then confirm it is absent.
+. Delete only namespace/project `retail-orders-demo`. This destroys the sample database, generated credentials and PVC; wait for namespace and volume cleanup.
+. Delete only AppProject `retail-orders` from `{gitops-namespace}`.
+
+**Expected/value:** The next presenter can start from an empty application state without touching existing demos. **Fallback:** Inspect finalizers and the storage reclaim policy; do not force-delete PVC/PV finalizers. The link:https://github.com/rh-aelgendy/acm-applications-demo/blob/main/retail-orders/README.md[application README] lists storage, network, image and dependency requirements.
+
+This is an unauthenticated, single-database workshop application with internal unencrypted tier traffic. Use synthetic data, a disposable namespace and normal provider cost controls; do not present it as production hardening, backup or cross-cluster data migration.
+
+== Rehearsal evidence
+
+Validated on the existing hub on 27 September 2026 using public application commit `27cecded8f5ac2550f98d0eeddde20423f07963a`: client/server manifest validation, six input/pricing tests, live Argo push sync to Synced/Healthy, browser checkout/history/platform view, HTTP retry/conflict checks, order persistence after API and PostgreSQL Pod replacement, unchanged credentials and orders after repeat sync, and blocked direct frontend-to-database connectivity. The test Application, namespace/data and AppProject were removed afterward for a fresh UI start.
+
+== Checkpoint
+
+Record the selected cluster, observed status and any skipped step in your session notes. A saved object or green policy alone does not prove every dependency is ready.
+
+== Clean up or hand over
+
+Follow xref:appendix-cleanup.adoc[Cleanup and ownership] for this module. Do not remove shared operators or another participant’s resources.

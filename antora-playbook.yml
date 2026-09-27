@@ -1,0 +1,22 @@
+site:
+  title: ACM Fleet Operations Workshop
+  start_page: modules::index.adoc
+content:
+  sources:
+    - url: .
+      branches: HEAD
+      start_path: content
+ui:
+  bundle:
+    url: https://github.com/rhpds/rhdp_showroom_theme/releases/download/v0.0.1/ui-bundle.zip
+    snapshot: false
+  supplemental_files: ./supplemental-ui
+asciidoc:
+  attributes:
+    page-pagination: true
+    experimental: true
+    attribute-missing: warn
+runtime:
+  cache_dir: ./.cache/antora
+output:
+  dir: ./www

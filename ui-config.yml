@@ -1,0 +1,3 @@
+# Showroom host integration is optional; standalone Antora does not embed terminals.
+type: showroom
+tabs: []

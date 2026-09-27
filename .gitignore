@@ -1,0 +1,12 @@
+node_modules/
+www/
+.cache/
+antora.local.yml
+profiles/local.json
+__pycache__/
+*.pyc
+.DS_Store
+.env
+*kubeconfig*
+*.pem
+*.key

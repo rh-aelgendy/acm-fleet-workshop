@@ -1,0 +1,76 @@
+= Environment setup
+
+== Objective
+
+Prepare a known starting state without making participants discover missing dependencies during a customer session. This appendix is facilitator work; the labs themselves use the consoles.
+
+== Starting point and permissions
+
+* Two existing OpenShift clusters, one running ACM and one already imported and Available. The hub can also serve as the source managed cluster if it is registered and Available.
+* A disposable workshop scope with admin-authorized preparation. Do not use an existing customer production namespace.
+* Browser access and login to ACM, the hub console, Argo CD and selected managed consoles.
+* CLI tools for facilitator validation: compatible `oc`, Git and Python with repository requirements. Cloud CLIs are only needed for selected extensions.
+* The presenter repository checkout for preparation code; the public application repository for Argo CD. Access to one does not grant access to the other.
+
+IMPORTANT: This revision supports one isolated workshop instance per fleet. Namespaces, policy names and labels are shared fixed conventions. Multiple simultaneous teams require separate scoped configuration and RBAC work; do not run competing resets against the same resources.
+
+== 1. Record your environment
+
+In *ACM → Infrastructure → Clusters*, record the actual *ManagedCluster name* of each participant cluster. Display names, CLI context names, Azure resource names and API hostnames are different identifiers. Never infer the ManagedCluster name from the API URL.
+
+[cols="1,2",options="header"]
+|===
+|Input |Where to find it / use
+|Source and destination ManagedCluster names |ACM Clusters; distinct Available clusters for placement
+|Hub CLI context and API |Your current authenticated CLI; preparation must verify the intended hub
+|Hub console URL |The browser console you will actually use
+|ClusterSet |Existing chosen set; binding must make it visible in each Placement namespace
+|Source / destination region |Actual provider location; a same-region lab must not be presented as multi-region
+|Git source and revision |Public application repo; `main` for workshop updates or a reviewed commit
+|GitOps and policy namespaces |Default `{gitops-namespace}` and `{policy-namespace}`; changing these requires matching preparation manifests, not only document substitution
+|Optional capabilities |Record pass/skip for every row in the compatibility appendix
+|===
+
+No tokens, kubeconfig content, AWS credentials, OCM secrets or Azure credentials belong in this worksheet or generated guide.
+
+== 2. Personalize the instructions locally
+
+From this workshop repository root:
+
+[source,sh]
+----
+python3 tools/configure.py
+----
+
+The questionnaire stores only nonsecret guide values in ignored `profiles/local.json` and writes `antora.local.yml`. It does not contact or change clusters and does not replace the preparation configuration. The build instructions in `README.md` explain how to render your profile.
+
+include::partial$environment.adoc[]
+
+WARNING: The generic site intentionally displays uppercase placeholders. Do not paste these names into a live cluster. A personalized page still needs its resource entry gates verified.
+
+== 3. Review facilitator configuration and preparation
+
+Use xref:appendix-facilitator.adoc[Facilitator preparation]. Match your actual ManagedCluster names, hub API, ClusterSet, Git source, storage and network settings to the preparation code. Review the ownership and supported-API checks before applying anything.
+
+The current `config/demo.yaml` is a rehearsal example with existing-fleet defaults, not a universal installer. Do not copy it unchanged to a new fleet or run setup merely because this site builds. Environment input collection in this guide does not yet render every cloud and optional-module resource.
+
+== 4. Pass the opening gates
+
+[cols="1,3",options="header"]
+|===
+|Gate |Required evidence
+|Fleet |Both ManagedClusters Available; chosen set and binding exist; no unexpected clusters selected
+|Governance |Namespace baseline Inform with a scoped staged violation; audit-only policies remain Inform; related objects in approved demo namespaces
+|GitOps |Argo available; Git accessible; target namespace permissions; expected Applications Healthy; source/destination registered as intended
+|Mobility |Source app and gateway healthy; source-only traffic; destination deselected; authenticated transport tested
+|Operations |Collectors and storage available; both-cluster metrics; canary and reporting worker healthy; dashboard rendering checked
+|Guardrails |Supported admission API; selected namespaces labelled; approved operator catalog/version checked; prepared Warn/Audit state
+|Team / cloud labs |Explicit capability gates and pre-created boundaries; real developer identity only if configured and tested
+|Three-tier app |Default storage class; required registry/PyPI access; no existing Retail Orders namespace or Application
+|===
+
+If a gate fails, mark that module *blocked* or *discussion only*. A demo with no cloud integrations can still cover inventory, governance and application delivery once those fixtures are prepared.
+
+== 5. Agree on cleanup
+
+Record resource ownership and selected modules before the session. Follow xref:appendix-cleanup.adoc[Cleanup and ownership]. Cluster-scoped roles, admission policies, operators and cloud resources require separate review; namespace deletion does not retire a cloud cluster.

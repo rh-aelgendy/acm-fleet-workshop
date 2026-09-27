@@ -1,0 +1,32 @@
+= Module 9: Cluster provisioning with CAPA / CAPZ (planned)
+
+*Objective:* Explain the planned self-service extension: an approved cluster request becomes provider-managed infrastructure and then joins the ACM fleet.
+
+[NOTE]
+This module is a roadmap placeholder, not an executable lab. Provider-specific prerequisites, supported APIs, templates and teardown procedures will be added and tested later. No ROSA-specific workflow is included in this workshop revision.
+
+== Intended flow
+
+[source,text]
+----
+Team request
+  → approved input template + RBAC/admission
+  → platform-owned Cluster API resources
+  → CAPA (AWS) or CAPZ (Azure)
+  → provider readiness + cluster import
+  → ACM allocation, governance and application placement
+----
+
+ACM supplies fleet intent and governance. Cluster API providers reconcile provider resources. Exact managed-service capabilities depend on the installed provider, ACM/MCE version and support matrix; the existence of CAPZ does not establish support for ARO HCP provisioning.
+
+== Planned boundaries
+
+* Approved regions, instance sizes and capacity ranges.
+* Scoped provider authentication without developer access to cloud credentials.
+* Observable readiness and import conditions, distinct from accepted requests.
+* Explicit ownership of shared versus per-cluster IAM, networking and identity resources.
+* Staged retirement and verification in both Kubernetes and the cloud provider.
+
+== Current participant action
+
+No creation, controller switch or deletion. Discuss how the existing Payments allocation would receive a newly provisioned cluster after import. Continue to xref:module-10-three-tier.adoc[Module 10: three-tier application] for an executable application-delivery lab.

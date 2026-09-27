@@ -1,0 +1,111 @@
+= Module 4 — Prepare and move a stateless service
+
+include::partial$environment.adoc[]
+
+**Objective of this lab/demo:** Use ACM placement and governance to prepare a second application destination, then make the traffic change visible to the customer.
+
+**Time:** 8–10 minutes. **Starting state:** source mobility app healthy, source-only traffic, destination not selected, and the two policies from lab 2 compliant. Gateway connectivity/authentication is prepared before the meeting. See xref:appendix-facilitator.adoc[facilitator preparation].
+
+[cols="1,1",options="header"]
+|===
+|Responsibility
+|Component
+
+|Select destination
+|ACM cluster labels and Placement
+
+|Deploy identical application
+|ApplicationSet and Argo CD
+
+|Report required controls
+|ACM governance
+
+|Route demo HTTP requests
+|Custom gateway configured through a hub ConfigMap
+
+|===
+
+
+== 1. Establish the customer baseline
+
+From the hub console, open **Networking → Routes → project `acm-demo-gateway` → mobility-gateway → Location**. In Fleet & Field, select **Start live requests**. Keep this tab open without refreshing its counters.
+
+**Say:** “The customer keeps this URL while we prepare another destination.”
+
+**Expected:** Source-only traffic and responses identifying `{source-cluster}`. **Value:** A visible business outcome. **Fallback:** Show the application and source availability without claiming continuity measurements if the page is unreachable.
+
+== 2. Select and deploy the cloud destination
+
+. In **ACM → Infrastructure → Clusters → {destination-cluster} → Labels**, set `demo.acm.example.com/mobility=true`.
+. In hub **Home → API Explorer → PlacementDecision → Instances → {gitops-namespace}**, filter by `cluster.open-cluster-management.io/placement=retail-mobility`. Confirm both clusters are selected.
+. Open **ACM → Applications → retail-mobility-{destination-cluster} → Argo CD**. Inspect source `retail/overlays/mobility` and destination namespace `acm-demo-mobility`.
+. Choose **Sync → Synchronize**, prune disabled. Wait for Synced / Healthy and inspect storefront, catalog and order-quote.
+. Return to **ACM → Governance**. Confirm `namespace-baseline` and `production-workload-standards` are Compliant for the spoke.
+
+**Say:** “ACM selects an eligible destination; GitOps deploys the same application; governance provides the evidence for our handover decision.”
+
+**Expected:** Destination prepared while requests still use the source. **Value:** Separate preparation from traffic exposure. **Fallback:** Stop before routing if sync, health or either policy fails. These are presenter gates; Placement does not automatically filter on every policy result.
+
+== 3. Shift traffic through the hub console
+
+This is the **custom gateway integration**, not a native ACM traffic-management feature. Keep both applications running throughout the session.
+
+. Switch to the **hub local console → Workloads → ConfigMaps → project `acm-demo-gateway` → mobility-traffic → YAML**. Save a local copy of the original `data.config.json` for rollback. It contains URLs and file paths, not token values; never open the gateway's Secret.
+. Check that `backends.destination.url` points to the spoke, not the source. In this private-ingress lab it includes `/{destination-cluster}/api/v1/namespaces/acm-demo-mobility/`. Preserve both backend URLs and every `token_file`/`ca_file` field. If these are not prepared, skip the traffic step and use the placement demonstration.
+. Edit only the following fields **inside the existing JSON string**, keeping valid JSON and using a new revision value:
+
+[cols="1,1,1,1",options="header"]
+|===
+|Field
+|Shared stage
+|Cloud-only stage
+|Rollback
+
+|`revision`
+|`ui-shared-1`
+|`ui-cloud-2`
+|`ui-source-3`
+
+|`profile`
+|`shared`
+|`destination`
+|`source`
+
+|`backends.source.weight`
+|`50`
+|`0`
+|`100`
+
+|`backends.destination.weight`
+|`50`
+|`100`
+|`0`
+
+|===
+
+
+. Save the shared stage. ConfigMap volumes propagate asynchronously: allow up to several minutes. Watch Fleet & Field until the configured traffic stabilizes at 50/50 and successful responses arrive from both clusters.
+. If requests fail, restore the original JSON with a new revision and keep both workloads. Do not advance on an unhealthy shared stage.
+. Save the cloud-only stage. Observe at least a minute of successful cloud responses and the actual failed-request counter. A single browser session does not prove every replica/client has switched.
+
+**Say:** “The fleet controls prepared the application; the traffic integration now directs customer requests to it. The same URL serves the same stateless service.”
+
+**Expected:** Responses identify `{destination-cluster}` after propagation. **Value:** Understand the components needed for portability. **Fallback:** Restore source-only routing through the same editor. Report failures honestly. If ConfigMap editing fails, retain the last working configuration.
+
+== 4. Close the loop
+
+Return to **ACM Applications** and the mobility PlacementDecision. Show that both destinations remain ready. **Do not deselect or delete the source during this UI exercise.** Keeping it provides immediate rollback without claiming that browser observation proved a safe drain of every gateway replica.
+
+**Say:** “We have changed where requests are served. Source retirement is a separate controlled operation after stronger readiness, propagation and drain checks.”
+
+**Expected:** Two healthy deployments, cloud-only configured traffic. **Value:** Reversible change with explicit responsibility. **Fallback:** Leave source-only traffic and explain which gate was not met.
+
+The after-session automation performs checked rollback/reset and any deliberate retirement. Label deselection alone does not delete workloads: the ApplicationSet preserves resources. In the original rehearsal both physical clusters were ARO; no sessions, databases or volumes were migrated. The hub-hosted gateway is not a site-DR design. Transport and lifecycle details (facilitator checkout: `mobility/README.md`).
+
+== Checkpoint
+
+Record the selected cluster, observed status and any skipped step in your session notes. A saved object or green policy alone does not prove every dependency is ready.
+
+== Clean up or hand over
+
+Follow xref:appendix-cleanup.adoc[Cleanup and ownership] for this module. Do not remove shared operators or another participant’s resources.

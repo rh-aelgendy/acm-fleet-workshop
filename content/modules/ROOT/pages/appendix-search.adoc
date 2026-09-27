@@ -1,0 +1,61 @@
+= Presenter search queries
+
+Open **All Clusters → Search**. Search properties come from the actual indexed resources and are case-sensitive for labels. Check autocomplete for this installed release. A ManagedCluster's labels do not automatically label its Pods or Nodes.
+
+First open **ACM → Infrastructure → Clusters**, inspect/filter the production environment labels, and note the selected cluster names.
+
+Use the resulting cluster names in Search's `cluster:` filter. Hub resources may be indexed under `local-cluster` rather than the custom ManagedCluster name; verify the Search cluster autocomplete and use the indexed name. Do not assume that `label:environment=production` filters all resources hosted by production clusters.
+
+Live verification on this fleet returned both `{source-cluster}` and `{destination-cluster}` in Search. During the label-expansion rehearsal, the index contained all six production Deployments with `available`, `desired`, and `ready` equal to `2`. Thus the current production filter is `cluster:{source-cluster},{destination-cluster}`. Node records expose `status:Ready` and semicolon-separated conditions such as `Ready=True`; some relationship-only records have no health fields.
+
+[cols="1,1",options="header"]
+|===
+|Purpose
+|Query / action
+
+|App objects across fleet
+|`namespace:acm-demo-prod`
+
+|Mobility deployments
+|`kind:Deployment namespace:acm-demo-mobility`
+
+|Unhealthy pods
+|`kind:Pod status:Pending,Error,Failed,ImagePullBackOff,CrashLoopBackOff,RunContainerError` plus production `cluster:` values
+
+|Injected failure
+|`kind:Pod namespace:acm-demo-lab status:CrashLoopBackOff`
+
+|Zero-ready deployments
+|`kind:Deployment ready:0` plus production cluster filter; inspect desired replicas to exclude intentional zero-replica fixtures
+
+|Partial availability
+|`kind:Deployment` plus production cluster filter; compare `available`/`ready` with `desired` in results or the resource details
+
+|Unhealthy nodes
+|`kind:Node status:NotReady cluster:{source-cluster},{destination-cluster}`; inspect `condition` for `Ready=False` or `Ready=Unknown`. Also browse `kind:Node` to catch missing health fields, and use the exact CLI condition comparison below
+
+|Owned demo objects
+|`label:demo.acm.example.com/id=aro-retail`
+
+|Ownership fixture
+|`kind:Deployment name:ownership-gap namespace:acm-demo-lab`
+
+|===
+
+
+Search has no guaranteed field-to-field predicate for `available < desired`. Do not invent a `status:Unhealthy` deployment filter. During the workshop, compare desired and available replicas in resource details and inspect each Node's Ready condition.
+
+== Facilitator-only exact API checks
+
+Use these outside the stakeholder session, in the target cluster context (or through the prepared proxy client):
+
+[source,bash,subs="attributes+"]
+----
+oc get deployments -A -o json | jq '.items[] | select((.spec.replicas // 1) > (.status.availableReplicas // 0)) | [.metadata.namespace,.metadata.name,.spec.replicas,(.status.availableReplicas // 0)]'
+oc get nodes -o json | jq '.items[] | select(any(.status.conditions[]; .type == "Ready" and .status != "True")) | .metadata.name'
+----
+
+
+No unhealthy nodes is a successful result. Never disrupt a worker to manufacture a search result. Search and compliance are eventually consistent; use direct API conditions/events when the index has not caught up.
+
+link:https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_management_for_kubernetes/2.17/html/search/acm-search[Official Search syntax and examples].

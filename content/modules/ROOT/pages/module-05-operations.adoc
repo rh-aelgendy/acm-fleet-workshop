@@ -1,0 +1,82 @@
+= Module 5 — Observe, troubleshoot and right-size
+
+include::partial$environment.adoc[]
+
+**Objective of this lab/demo:** Use fleet metrics and Search to identify an operational problem, inspect its cause, verify recovery and discuss unused reserved capacity.
+
+**Time:** 10–12 minutes. **Starting state:** ACM metrics collection and Perses prepared; `availability-canary` and `retail-reporting` healthy on the spoke in `acm-demo-lab`. Managed-console browser access is required for the two workload edits. If unavailable, present observation only; do not describe an unapplied change as remediation.
+
+== 1. Start with fleet health
+
+Open **ACM → Overview → Grafana** (or the observability Grafana Route on the hub). Show **ACM - Clusters Overview** and **ARO Retail — Demo Operations**. Select a recent time range and the two clusters. Inspect available/desired replicas, pod failures and worker/namespace utilization.
+
+Then open the **hub local console → Observe → Dashboards** and select **ARO Retail — Right-sizing opportunity**, project `open-cluster-management-observability` if the project selector is present.
+
+**Say:** “Fleet health directs our attention. Application availability and resource usage tell us what to investigate.”
+
+**Expected:** Metrics from both clusters; available canary and reporting workload. **Value:** One operational view. **Fallback:** Use the working Grafana view if a Perses tile fails; refresh once, then avoid claiming the rendering issue is permanently fixed. A managed cluster's Observe page is a local fallback, not central fleet aggregation. Missing data is not zero usage.
+
+== 2. Create one isolated, visible failure
+
+. From **ACM → Infrastructure → Clusters → {destination-cluster} → Console**, open **Workloads → Deployments → project `acm-demo-lab` → availability-canary → YAML**.
+. Save the current YAML locally for recovery. Confirm `replicas: 1` and the demo ownership label.
+. Set `spec.strategy` to `type: Recreate`, removing its `rollingUpdate` field if present. This prevents a healthy old replica masking the failure.
+. In the canary container only, replace `command` with the following list. Preserve its image, resources, probes and other fields:
+
+[source,yaml,subs="attributes+"]
+----
+command:
+  - python3
+  - -u
+  - -c
+  - 'print("Intentional workshop failure", flush=True); raise SystemExit(42)'
+----
+
+
+. Save. Wait for restart attempts; the initial state may be Error before CrashLoopBackOff.
+. Return to **ACM → Search** and enter `kind:Pod namespace:acm-demo-lab status:CrashLoopBackOff`. Open the spoke result, then its managed-console **Logs / Events**. Inspect the exit code and message.
+. Return to the central dashboard. Observe canary availability falling and restarts/failure signals after ingestion catches up.
+
+**Say:** “Search finds the affected resource across the fleet. Local logs explain the cause. The retail application remains separate.”
+
+**Expected:** Only the canary fails. **Value:** Follow fleet signal to root cause. **Fallback:** Inspect the Pod's waiting reason and previous container logs if Search lags; do not disrupt a node or another deployment.
+
+== 3. Recover and verify
+
+In the same Deployment YAML editor, restore the original container command:
+
+[source,yaml,subs="attributes+"]
+----
+command:
+  - python3
+  - /app/server.py
+----
+
+
+Restore the original strategy from the saved YAML, or keep Recreate for this one-replica lab recovery. Save. Wait for the new Pod to become Ready and Deployment availability to return to `1`. Return to ACM Search and dashboards.
+
+**Say:** “We verify the recovery with workload state and fleet telemetry.”
+
+**Expected:** No current CrashLoopBackOff, available replica restored. Historical failures remain in the selected time range. **Value:** Close the incident using evidence. **Fallback:** Inspect rollout events if readiness fails; the xref:attachment$observability--failure-fixture--healthy.yaml[healthy fixture] is the reference. Never run recovery against retail production.
+
+== 4. Turn excess reservations into usable capacity
+
+. Open **hub Observe → Dashboards → ARO Retail — Right-sizing opportunity**, last 30 minutes. Compare requested CPU/memory with actual use and availability.
+. Open **ACM Right-Sizing Namespaces** (resource `acm-rs-namespace-overview`, project `observability-analytics`), select `{destination-cluster}`, then inspect `acm-demo-lab` and the history/profile controls.
+. Explain that historical recommendations need representative demand and sufficient data; a quiet lab period is not a production sizing study.
+. In the **spoke console → Workloads → Deployments → acm-demo-lab → retail-reporting → YAML**, change only the container's `resources.requests`: CPU `250m` → `25m`, memory `256Mi` → `64Mi`. Keep limits at `500m` / `512Mi` and replicas at `1`. Save.
+. Wait for its Recreate rollout to finish. Return to the custom dashboard and observe requests stepping down after collection, with availability restored.
+
+**Say:** “For this bounded sample worker, we release reserved capacity. The change is our lab choice, not an automatically generated ACM recommendation or a promise of Azure bill savings.”
+
+**Expected:** 225m CPU and 192Mi memory requests released; low usage and a healthy worker. **Value:** An evidence-based capacity conversation. **Fallback:** If history is empty, use the live-utilization view and say analytics is warming up. Restore `250m` / `256Mi` through the same editor if the worker fails.
+
+ACM 2.17's Perses integration is recorded as preview in the module notes (facilitator checkout: `observability/perses/README.md`). Read metric/view details (facilitator checkout: `observability/README.md`) when rehearsing. Preparation, dashboard installation and repeat-session reset are in the xref:appendix-facilitator.adoc[facilitator runbook].
+
+== Checkpoint
+
+Record the selected cluster, observed status and any skipped step in your session notes. A saved object or green policy alone does not prove every dependency is ready.
+
+== Clean up or hand over
+
+Follow xref:appendix-cleanup.adoc[Cleanup and ownership] for this module. Do not remove shared operators or another participant’s resources.

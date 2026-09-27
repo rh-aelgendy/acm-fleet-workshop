@@ -1,0 +1,46 @@
+= Compatibility and module gates
+
+== Tested baseline and portability boundary
+
+The original rehearsal recorded ACM 2.17.2, OpenShift 4.22.13 on the hub, 4.22.12 on the spoke, and OpenShift GitOps 1.21.4. These are observations from September 2026, not a requirement to upgrade to those patch releases or proof of support on every provider. Check installed CRDs, served API versions and vendor support before applying manifests.
+
+[cols="1,2,3",options="header"]
+|===
+|Module |Dependency |Fresh-environment decision
+|0–1 Fleet |Available managed clusters and Search |Validate Search coverage and RBAC for the target distribution
+|2 Governance |Policy/ConfigurationPolicy/PlacementBinding v1; Placement v1beta1; set binding v1beta2 |Discover APIs on hub and managed cluster; strict dry-run generated objects
+|3 GitOps |OpenShift GitOps; ApplicationSet; GitOpsCluster; managed service account/proxy integration |Requires registration, scoped target access and reachable APIs, beyond merely importing a cluster
+|4 Mobility |Module 3; prepared gateway; working direct/proxy transport |Stateless HTTP only; no storage move or site DR
+|5 Operations |MCO; object storage; collectors; optional COO/Perses and analytics |Two clusters alone do not enable this; test rendered tiles, query results and data freshness
+|6 Guardrails |OperatorPolicy v1beta1; compatible OLM catalog; ValidatingAdmissionPolicy/Binding v1 |Select a supported operator version deliberately; no adoption or removal of customer operators
+|7 Payments |Scoped policies, GitOps project and admission; optional real IdP group |Admin-led inspection is not proof of tenant RBAC
+|8 Azure access |ASO, workload OIDC/federation, scoped Azure bootstrap permissions, Blob test resources |Azure-specific; optional billable integration; positive and negative data-plane proof
+|9 Cluster provisioning |CAPA/CAPZ provider support and approved template design |Planned discussion only; no provisioning in this revision
+|10 Three-tier |OpenShift Routes, default storage class, GitOps, public registries and PyPI |Independent push Application on hub; PVC persistence only
+|Networking |Supported Submariner topology, gateways, DNS and ServiceExport APIs |Optional discussion until CIDRs/connectivity/support are validated
+|===
+
+== Different providers and regions
+
+A region label changes selection only when a Placement consumes it. It does not create networking or replicate data. Cross-region traffic can add latency and cost.
+
+Supported non-OpenShift Kubernetes distributions can participate in applicable ACM management capabilities, subject to the product matrix and add-on prerequisites. Do not transfer this workshop's OpenShift-specific Routes, OLM OperatorPolicies, SCC assumptions or console paths to AKS unchanged. A separate AKS track must supply and validate its workload exposure, operator installation and observability alternatives.
+
+== Preview and support labels
+
+The rehearsal uses Perses/right-sizing features whose preview status must be checked for the exact release. Treat custom dashboards, gateway and self-service templates as workshop integrations. Upstream ASO and the SCLorg PostgreSQL image do not inherit ACM product support. No module controls ARO-managed upgrades.
+
+== Required checks before applying
+
+. Discover the required API group/version/kind on its actual target cluster.
+. Validate generated YAML client-side and with `oc apply --dry-run=server` using the intended context.
+. Prepare namespaces first where server validation requires them; a dry-run does not create a namespace.
+. Inspect actual PlacementDecision scope, not only a selector in a source file.
+. Verify controller conditions and observed generation before recording a pass.
+
+== References
+
+* link:https://access.redhat.com/articles/7142376[ACM 2.17 support matrix] (subscriber access may be required)
+* link:https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_management_for_kubernetes/2.17/html/gitops/index[ACM GitOps]
+* link:https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_management_for_kubernetes/2.17/html/governance/index[ACM governance]
+* link:https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_management_for_kubernetes/2.17/html/observability/index[ACM observability]

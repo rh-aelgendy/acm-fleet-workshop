@@ -1,0 +1,29 @@
+= Module 2 — Detect drift and remediate centrally
+
+include::partial$environment.adoc[]
+
+*Time:* 10–15 minutes. Starting state: scoped Inform policies and zero-replica violation fixture prepared.
+
+**Objective of this lab/demo:** Show the difference between detecting a violation, centrally enforcing a baseline and correcting an application manifest.
+
+. Open **Governance → Policies**, namespace `{policy-namespace}`.
+. Open `namespace-baseline` → cluster results → violation details. Inspect the desired quota, LimitRange, ownership labels and default-deny NetworkPolicy. Follow its PlacementBinding to the Placement; inspect labels and selected clusters.
+. Open `production-workload-standards`. Find `ownership-gap` in `acm-demo-lab` on `{destination-cluster}`. This isolated Deployment has zero replicas and lacks the required resource declarations/digest pin.
+. Return to **namespace-baseline → Actions → set remediation to Enforce**, if offered. The stable alternative is **Edit policy / YAML**: change the root Policy's `spec.remediationAction` from `inform` to `enforce`, then save. Change only this named policy.
+. Watch its per-cluster results become **Compliant**. Open related objects to show what ACM created or corrected.
+. Keep `production-workload-standards` in **Inform**. From its violation, open the spoke console → **Workloads → Deployments → project `acm-demo-lab` → ownership-gap → YAML**. In the existing container, copy the pinned `image` and `resources` values from the xref:attachment$policies--fixtures--compliant--deployment.yaml[compliant fixture]. Keep replicas at `0` and preserve all other fields. Save.
+. Return to ACM and wait for the workload audit to become **Compliant**. Open `unauthorized-loadbalancers` to show the separate exposure audit; leave it Inform.
+
+**Say:** “ACM supplies the platform baseline across the selected fleet. The workload audit identifies an application defect; its owner fixes that manifest. Detection does not invent a safe application configuration.”
+
+**Expected:** Baseline compliance changes after policy enforcement; workload compliance changes after the explicit fixture edit. **Customer value:** Central correction with clear ownership. **Fallback:** Inspect each violation's related objects. If the spoke console is unreachable, complete the baseline enforcement and explain the workload correction using its YAML; do not claim it was applied. Do not enforce audit-only policies or change unrelated customer resources.
+
+The zero-replica fixture is deliberately outside GitOps. Normal application fixes belong in the public application repository, followed by GitOps reconciliation.
+
+== Checkpoint
+
+Record the observed cluster selection and health/compliance result. Explain which controller changed which object.
+
+== Clean up or hand over
+
+Continue to the next selected module, or follow xref:appendix-cleanup.adoc[Cleanup and ownership].

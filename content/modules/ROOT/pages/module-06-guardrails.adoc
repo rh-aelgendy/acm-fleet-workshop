@@ -1,0 +1,59 @@
+= Module 6 — Required capabilities and preventive guardrails
+
+include::partial$environment.adoc[]
+
+**Objective of this lab/demo:** Show that ACM can detect a missing approved operator, install it through policy enforcement, and distribute an admission guardrail that rejects prohibited actions locally.
+
+**Time:** 8–12 minutes, excluding first installation. **Starting state:** `demo-regulated` Placement selects the intended clusters; operator and certificate policies are Inform; admission begins Warn + Audit. The operator may already be installed after a previous session. See xref:appendix-facilitator.adoc[facilitator preparation].
+
+== 1. Find the missing capability or operand
+
+Open **ACM → Governance → Policies → namespace `{policy-namespace}` → regulated-cert-manager**. Inspect cluster results, the embedded OperatorPolicy and `demo-regulated` Placement.
+
+**Say:** “Regulated clusters require this approved certificate-management capability. Inform reports drift without installing it.”
+
+**Expected:** Fresh cluster: missing operator and NonCompliant. Repeat session: existing approved operator is Compliant; `regulated-certificate` has the staged missing certificate instead. **Value:** A fleet-wide capability baseline. **Fallback:** Use the repeat-session certificate violation; do not uninstall cert-manager or pretend it is missing.
+
+== 2. Authorize ACM to supply the capability
+
+. Select `regulated-cert-manager` → **Actions → set remediation to Enforce**. If the action is unavailable, edit the **root Policy YAML**, setting `spec.remediationAction: enforce` and the embedded OperatorPolicy's remediationAction to `enforce`. Leave the approved CSV/version list and `upgradeApproval: None` unchanged.
+. Watch per-cluster results and OperatorPolicy conditions. On the managed console, inspect **Operators → Installed Operators** and the approved CSV's Succeeded state.
+. Wait for cert-manager controllers and its Certificate API before the next step. A saved policy is not a completed operator installation.
+. Set `regulated-certificate` to Enforce through the same Policy action/YAML editor. Inspect the generated Issuer and Certificate through related resources or managed-console **API Explorer → Certificate → acm-demo-regulated → retail-demo**.
+
+**Say:** “One centrally approved desired state supplies the capability on selected clusters, then proves it can issue an application certificate.”
+
+**Expected:** Operator and certificate policies Compliant; Certificate Ready=True. **Value:** Repeatable capability delivery and drift correction. **Fallback:** Inspect OLM/policy conditions and stop if the catalog, scheduling or version approval is blocking. The demo certificate is self-signed; production needs an approved PKI.
+
+== 3. Change from warnings to prevention
+
+. Open **ACM Governance → regulated-service-guardrail → Edit policy / YAML**. This policy is already Enforce because ACM maintains the admission objects.
+. Within `spec.policy-templates`, locate the ConfigurationPolicy object template whose `objectDefinition.kind` is `ValidatingAdmissionPolicyBinding` and name is `acm-demo-approved-service-types`.
+. Change that binding's desired `spec.validationActions` from `[Warn, Audit]` to `[Deny, Audit]`. Keep its `complianceType: mustonlyhave`, namespace selector and other fields unchanged. Save the root ACM Policy.
+. Wait for Compliant, then inspect the **managed cluster's** binding through API Explorer. Confirm actual actions are **Deny + Audit**, the ValidatingAdmissionPolicy has no CEL type-check warnings, and `acm-demo-regulated` has the demo and regulated labels.
+
+**Say:** “ACM distributes the rule; each Kubernetes API server enforces it when a request arrives.”
+
+**Expected:** Both selected clusters receive Deny + Audit. **Value:** Central intent with immediate local prevention. **Fallback:** If propagation or type checking fails, stop before attempting a prohibited Service. Do not create a LoadBalancer merely to demonstrate a warning.
+
+== 4. Show a rejection in the console
+
+In a verified managed cluster console, choose **+ → Import YAML**, confirm the cluster/namespace, and paste the xref:attachment$policies--regulated--fixtures--nodeport.yaml[NodePort probe]. Click **Create** only after step 3 passes.
+
+**Expected:** Rejection containing “Regulated applications must use ClusterIP services and the approved ingress path”. No Service is created. An RBAC or quota denial is not evidence of this guardrail.
+
+Replace `spec.type: NodePort` with `spec.type: ClusterIP` and submit the same demo-only probe. It should succeed; it deliberately selects no real workload. Inspect the Service, then delete only `guardrail-probe` through its Actions menu.
+
+**Say:** “The team can create an internal Service, but cannot bypass the reviewed exposure path. The rule also covers LoadBalancer, without creating an Azure load balancer during this demonstration.”
+
+**Value:** A concrete preventive control. **Fallback:** If browser access is unavailable, show the exact policy and previously recorded admission-test evidence, clearly labeled as rehearsal evidence. If a NodePort unexpectedly succeeds, delete that named probe and investigate; do not claim the guardrail passed.
+
+For a repeat session, retain cert-manager. Facilitator reset restores the certificate violation and Warn + Audit afterward. This demonstrates selected controls, not regulatory certification. Technical module notes (facilitator checkout: `policies/regulated/README.md`).
+
+== Checkpoint
+
+Record the selected cluster, observed status and any skipped step in your session notes. A saved object or green policy alone does not prove every dependency is ready.
+
+== Clean up or hand over
+
+Follow xref:appendix-cleanup.adoc[Cleanup and ownership] for this module. Do not remove shared operators or another participant’s resources.

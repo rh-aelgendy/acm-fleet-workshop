@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payments-access-request
+  labels:
+    demo.acm.example.com/id: aro-retail
+  namespace: acm-demo-payments-requests
+data:
+  application: payments-api
+  environment: development
+  accessProfile: subscription-owner

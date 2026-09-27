@@ -1,0 +1,47 @@
+= Acceptance and rehearsal record
+
+== Current evidence
+
+The original ARO demos have module-specific rehearsal records in the presenter repository. The Retail Orders app was deployed, exercised and removed on 27 September 2026. Those records do not prove that this new guide or a different fleet is ready.
+
+This guide's build/link checks are separate from live functional checks. Record versions, date, ManagedCluster names and results without credentials.
+
+== Fresh-fleet acceptance checklist
+
+[cols="2,3,1",options="header"]
+|===
+|Check |Evidence required |Status
+|Environment input |Different ManagedCluster names and regions render correctly; placeholders cannot be mistaken for live defaults |Pending rehearsal
+|Preparation |Two initially imported clusters, only ACM assumed; dependency preparation documented without hidden manual repairs |Pending
+|Fleet / selection |Correct labels, ClusterSet binding, PlacementDecision; no extra selected clusters |Pending
+|Governance |Initial drift, enforce baseline, corrected workload; unrelated namespaces unchanged |Pending
+|GitOps |Public Git access, expected generated Applications, label adds destination; manual sync works |Pending
+|Mobility |Destination readiness/compliance gates; shared/cloud/source rollback; actual error counts recorded |Pending
+|Operations |Working charts and fresh metrics; isolated failure and recovery; right-sizing rollback |Pending
+|Guardrails |Fresh or repeat operator path; precise admission denial then allowed Service |Pending
+|Team access |Restricted identity allows expected actions and denies cluster/global actions; real SSO if claimed |Pending
+|Azure access |Skipped or fully validated with cloud cleanup evidence |Pending
+|Three-tier |Empty start, UI create/sync, real order, Pod replacement, repeat sync and disk cleanup |Original fleet passed; fresh fleet pending
+|Navigation |Colleague follows pages with no verbal correction; all console fallbacks work |Pending
+|Clean start |Reset repeated twice; teardown leaves owned-resource inventory clear |Pending
+|Distribution |Guide deploys independently; participants can access every required source/attachment |Pending
+|===
+
+== Record a result
+
+[source,text]
+----
+Date / tester:
+ACM / OpenShift / GitOps versions:
+Hub + source + destination ManagedCluster names:
+Guide commit + application revision:
+Modules selected / skipped:
+Per-step observed result (not only attempted action):
+Navigation corrections:
+Resources/costs retained after cleanup:
+Blockers and owner:
+----
+
+== Ready-to-share definition
+
+A colleague can complete the selected path from the documented prerequisites, without the original presenter's cluster names, cloud IDs, private browser session or unpublished files. All remaining provider-specific modules are labelled optional. The guide makes no claim of general Kubernetes compatibility for OpenShift-only steps.

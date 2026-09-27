@@ -1,0 +1,56 @@
+apiVersion: managedidentity.azure.com/v1api20230131
+kind: UserAssignedIdentity
+metadata:
+  name: payments-api
+  labels:
+    demo.acm.example.com/id: aro-retail
+  namespace: acm-demo-payments-catalog
+spec:
+  location: westeurope
+  owner:
+    armId: /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<DEMO_RESOURCE_GROUP>
+  tags:
+    acm-demo-id: aro-retail
+  operatorSpec:
+    configMaps:
+      clientId:
+        name: payments-identity
+        key: clientId
+      principalId:
+        name: payments-identity
+        key: principalId
+      tenantId:
+        name: payments-identity
+        key: tenantId
+---
+apiVersion: managedidentity.azure.com/v1api20230131
+kind: FederatedIdentityCredential
+metadata:
+  name: payments-api-spoke
+  labels:
+    demo.acm.example.com/id: aro-retail
+  namespace: acm-demo-payments-catalog
+spec:
+  owner:
+    name: payments-api
+  issuer: https://<VERIFIED_SPOKE_OIDC_ISSUER>
+  subject: system:serviceaccount:acm-demo-payments-cloud:payments-blob-reader
+  audiences:
+  - api://AzureADTokenExchange
+---
+apiVersion: authorization.azure.com/v1api20220401
+kind: RoleAssignment
+metadata:
+  name: 8c68e2d0-6883-54fa-9f6c-f074456f2311
+  labels:
+    demo.acm.example.com/id: aro-retail
+  namespace: acm-demo-payments-catalog
+spec:
+  owner:
+    armId: <APPROVED_PAYMENTS_CONTAINER_ARM_ID>
+  principalType: ServicePrincipal
+  principalIdFromConfig:
+    name: payments-identity
+    key: principalId
+  roleDefinitionReference:
+    armId: /subscriptions/<SUBSCRIPTION_ID>/providers/Microsoft.Authorization/roleDefinitions/2a2b9908-6ea1-4ae2-8e65-a410df84e7d1

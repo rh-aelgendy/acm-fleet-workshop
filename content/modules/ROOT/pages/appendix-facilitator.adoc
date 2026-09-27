@@ -1,0 +1,39 @@
+= Facilitator preparation
+
+== Keep installation out of the participant flow
+
+Preparation may use CLI automation. During the workshop, participants make fleet decisions in ACM, inspect YAML in the correct console and follow ACM links into Argo CD. This preserves the distinction between product capability and custom integration.
+
+== Current preparation code
+
+The presenter repository contains `config/demo.yaml`, `scripts/preflight.sh`, `scripts/setup.sh`, module-specific setup scripts and ownership-aware reset/teardown routines. Its existing `docs/facilitator-runbook.md` remains the operational reference for the original fleet.
+
+For another environment, work on a separate checkout/configuration and inspect the scripts' assumptions first. The documentation questionnaire does not modify `config/demo.local.yaml` or cloud settings. Do not copy credentials into the guide or Git.
+
+[cols="1,3,2",options="header"]
+|===
+|Module |Preparation must supply |Opening state
+|Fleet |Business labels, correct set membership, Search |Both clusters Available
+|Governance |Scoped namespace baseline, workload/exposure audits, safe zero-replica fixture |Baseline Inform; workload fixture noncompliant
+|GitOps |Set bindings, registration, namespace permissions, ApplicationSets, public source |Source development and destination production Healthy
+|Mobility |Source app, gateway, authenticated destination transport and allow rules |Source-only routing; destination unselected
+|Operations |Storage/collectors/dashboards, canary, reporting worker |Healthy fixtures; recent metrics
+|Guardrails |Selected catalog/CSV, OperatorPolicy, issuer/certificate fixture, admission |Inform operator/certificate; Warn+Audit admission
+|Payments |Team allocation, namespace/RBAC, AppProject, identity-config policy |Healthy app; configuration-only identity drift
+|Azure access |ASO/federation/bootstrap, approved containers/scopes, request guardrails |AwaitingRequest; no unplanned broad permissions
+|Cluster provisioning |Future CAPA/CAPZ templates and provider-specific validation |Planned; excluded from executable path
+|Three-tier |GitOps and namespace/project creation rights; registry/PyPI/storage |No Retail Orders objects; participant creates them
+|===
+
+== Fresh-environment work still requiring rehearsal
+
+* Confirm cluster-name substitutions reach every prepared Placement, GitOps destination, gateway URL and optional-module template.
+* Validate the chosen ClusterSet and ClusterSetBindings without moving unrelated clusters.
+* Verify Argo access to private APIs, controller inventory permissions and namespace bootstrap.
+* Choose region/storage/provider values and optional-module versions from supported combinations.
+* Verify generated workload identities and cloud scopes; do not reuse the original fleet's IDs.
+* Exercise every cleanup path against owned resources only.
+
+== Release gate
+
+Do not call this universally reproducible until the xref:appendix-validation.adoc[acceptance checklist] passes on a fresh hub and spoke. Build and link checks prove the guide renders; they do not prove infrastructure readiness.
