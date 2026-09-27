@@ -57,7 +57,7 @@ Restore the original strategy from the saved YAML, or keep Recreate for this one
 
 **Say:** “We verify the recovery with workload state and fleet telemetry.”
 
-**Expected:** No current CrashLoopBackOff, available replica restored. Historical failures remain in the selected time range. **Value:** Close the incident using evidence. **Fallback:** Inspect rollout events if readiness fails; the xref:attachment$observability--failure-fixture--healthy.yaml[healthy fixture] is the reference. Never run recovery against retail production.
+**Expected:** No current CrashLoopBackOff, available replica restored. Historical failures remain in the selected time range. **Value:** Close the incident using evidence. **Fallback:** Inspect rollout events if readiness fails; the xref:attachment$observability-failure-fixture-healthy.yaml[healthy fixture] is the reference. Never run recovery against retail production.
 
 == 4. Turn excess reservations into usable capacity
 

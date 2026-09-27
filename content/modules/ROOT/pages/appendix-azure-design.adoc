@@ -20,7 +20,7 @@ flowchart LR
 ----
 
 
-The readable xref:attachment$self-service--approved-access--aso-resources.example.yaml[ASO YAML example] shows the identity, federation and scoped grant together. The live resources substitute discovered values for the example placeholders.
+The readable xref:attachment$self-service-approved-access-aso-resources.example.yaml[ASO YAML example] shows the identity, federation and scoped grant together. The live resources substitute discovered values for the example placeholders.
 
 The request is declarative and pre-approved by its template. There is no human
 approval queue in this demo. Production can put a portal, pull-request review or

@@ -38,7 +38,7 @@ Open **ACM → Governance → Policies → namespace `{policy-namespace}` → re
 
 == 4. Show a rejection in the console
 
-In a verified managed cluster console, choose **+ → Import YAML**, confirm the cluster/namespace, and paste the xref:attachment$policies--regulated--fixtures--nodeport.yaml[NodePort probe]. Click **Create** only after step 3 passes.
+In a verified managed cluster console, choose **+ → Import YAML**, confirm the cluster/namespace, and paste the xref:attachment$policies-regulated-fixtures-nodeport.yaml[NodePort probe]. Click **Create** only after step 3 passes.
 
 **Expected:** Rejection containing “Regulated applications must use ClusterIP services and the approved ingress path”. No Service is created. An RBAC or quota denial is not evidence of this guardrail.
 

@@ -7,7 +7,7 @@
     "preview": "python3 -m http.server 8088 --bind 127.0.0.1 --directory www"
   },
   "devDependencies": {
-    "@antora/cli": "3.1.10",
-    "@antora/site-generator": "3.1.10"
+    "@antora/cli": "3.2.0",
+    "@antora/site-generator": "3.2.0"
   }
 }

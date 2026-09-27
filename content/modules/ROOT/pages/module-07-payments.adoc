@@ -14,7 +14,7 @@ Open **ACM → Infrastructure → Clusters → {destination-cluster} → Labels*
 
 **Say:** “This existing cluster is allocated to Payments. The platform controls which cluster is eligible; the team does not choose arbitrary destinations.”
 
-**Expected:** Only the approved spoke is selected. **Value:** Repeatable allocation within fleet controls. **Fallback:** Inspect the Placement YAML and cluster labels if the decision view is delayed. The xref:attachment$self-service--payments--cluster-request.example.yaml[cluster-request example] is an illustrative contract, not a working ARO creation API. Cluster provisioning is reserved for the planned CAPA/CAPZ module.
+**Expected:** Only the approved spoke is selected. **Value:** Repeatable allocation within fleet controls. **Fallback:** Inspect the Placement YAML and cluster labels if the decision view is delayed. The xref:attachment$self-service-payments-cluster-request.example.yaml[cluster-request example] is an illustrative contract, not a working ARO creation API. Cluster provisioning is reserved for the planned CAPA/CAPZ module.
 
 == 2. Inspect the centrally maintained boundaries
 

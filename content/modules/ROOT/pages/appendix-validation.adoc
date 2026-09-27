@@ -6,6 +6,17 @@ The original ARO demos have module-specific rehearsal records in the presenter r
 
 This guide's build/link checks are separate from live functional checks. Record versions, date, ManagedCluster names and results without credentials.
 
+== Guide checks completed (27 September 2026)
+
+* Antora 3.2.0 generic and alternate-environment builds passed with warning-level failures enabled.
+* Source checks passed for 22 AsciiDoc files; rendered checks passed for 20 HTML pages, including redirects, local assets and fragments.
+* A synthetic profile rendered different ManagedCluster identities inside generated Application names and instructions.
+* Profile checks rejected duplicate cluster identities, markup and URLs containing credentials.
+* Browser inspection confirmed the Showroom navigation, setup page and governance steps; the theme favicon reference was supplied locally.
+* Build dependencies were locked; npm reported no known vulnerabilities at validation time.
+
+These are documentation checks. They do not change the pending live acceptance results below.
+
 == Fresh-fleet acceptance checklist
 
 [cols="2,3,1",options="header"]

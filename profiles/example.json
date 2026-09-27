@@ -1,0 +1,11 @@
+{
+  "profile-name": "Example two-cluster lab",
+  "source-cluster": "hub-east",
+  "destination-cluster": "spoke-west",
+  "hub-context": "hub-context",
+  "hub-api": "https://api.hub.example:6443",
+  "hub-console": "https://console.hub.example",
+  "source-region": "east-region",
+  "destination-region": "west-region",
+  "cluster-set": "workshop"
+}

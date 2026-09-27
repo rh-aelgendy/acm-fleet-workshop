@@ -24,7 +24,7 @@ In the **hub local console → Workloads → ConfigMaps → acm-demo-payments-ca
 
 == 2. Demonstrate the approved input boundary
 
-Open **hub + → Import YAML** and paste the complete xref:attachment$self-service--approved-access--request-denied.yaml[denied request]. It requests `subscription-owner`. Click **Create** and show the named admission rejection. If the request already exists, use its YAML editor to attempt the same `data.accessProfile` change; the save must be rejected.
+Open **hub + → Import YAML** and paste the complete xref:attachment$self-service-approved-access-request-denied.yaml[denied request]. It requests `subscription-owner`. Click **Create** and show the named admission rejection. If the request already exists, use its YAML editor to attempt the same `data.accessProfile` change; the save must be rejected.
 
 **Say:** “The team cannot turn a Blob reader request into subscription ownership.”
 
@@ -32,7 +32,7 @@ Open **hub + → Import YAML** and paste the complete xref:attachment$self-servi
 
 == 3. Submit the approved request through the console
 
-For a fresh run, use **hub + → Import YAML** with the complete xref:attachment$self-service--approved-access--request-approved.yaml[approved request]:
+For a fresh run, use **hub + → Import YAML** with the complete xref:attachment$self-service-approved-access-request-approved.yaml[approved request]:
 
 [source,yaml,subs="attributes+"]
 ----
