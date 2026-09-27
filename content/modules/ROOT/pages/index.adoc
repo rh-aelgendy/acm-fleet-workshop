@@ -55,4 +55,4 @@ The mobility gateway is workshop integration, not native ACM traffic management.
 * *Fallback*: complete the safe subset or record the blocker; do not claim success.
 * *Checkpoint*: capture the selected scope and result without credentials.
 
-This is a community workshop, not an official product certification or support statement. The structure uses Antora/AsciiDoc and the Showroom theme, following the link:https://github.com/rh-mobb/snakewell[Snakewell workshop] example. Product support is determined by the applicable Red Hat support matrix.
+This is a community workshop, not an official product certification or support statement. The guide uses Antora/AsciiDoc and the Showroom theme. Product support is determined by the applicable Red Hat support matrix.

@@ -1,6 +1,6 @@
 # ACM Fleet Operations workshop
 
-An Antora/AsciiDoc participant guide using the same versioned Showroom theme as [Snakewell](https://github.com/rh-mobb/snakewell). Existing presenter guides and live cluster resources remain in the separate ACM demo repository. This is a draft for fresh-environment acceptance, not a universal installer.
+An Antora/AsciiDoc participant guide using the Red Hat Showroom theme. Existing presenter guides and live cluster resources remain in the separate ACM demo repository. This is a draft for fresh-environment acceptance, not a universal installer.
 
 ## Read and build
 
@@ -13,7 +13,7 @@ npm run build
 npm run preview
 ```
 
-Open `http://localhost:8088`. Build output is `www/`; it contains only the curated guide and attachments. Antora 3.2.0 is pinned with a lockfile; it retains the reference workshop format while using the current builder. The Showroom UI bundle is pinned to release `v0.0.1`; the first build needs access to GitHub. No live cluster access is used by the build.
+Open `http://localhost:8088`. Build output is `www/`; it contains only the curated guide and attachments. Antora 3.2.0 is pinned with a lockfile; builds use reproducible dependencies. The Showroom UI bundle is pinned to release `v0.0.1`; the first build needs access to GitHub. No live cluster access is used by the build.
 
 For environment-specific instructions:
 
@@ -47,12 +47,8 @@ The guide is built locally first. No public Pages site is enabled automatically,
 
 Fresh-environment preparation still needs validation and generalization; the questionnaire does not solve every installer assumption. The Environment setup, Compatibility and Acceptance pages enumerate those gates. The original repository’s `docs/` remains the current-fleet operational reference; new portable workshop editorial changes belong here. Review both guides when the underlying demo behavior changes.
 
-## Reference
-
-Format inspiration: Snakewell public source, inspected 2026-09-27. We reuse its Antora/Showroom conventions, not its application or exploit content. The external theme retains its own license. This community workshop is not an assertion of Red Hat certification.
-
 ## GitHub review and website
 
 The public source lives at [rh-aelgendy/acm-fleet-workshop](https://github.com/rh-aelgendy/acm-fleet-workshop). Pushes and pull requests build and validate the site and upload a short-lived `workshop-site` artifact. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-To publish the reviewed generic guide, select **Settings → Pages → Source: GitHub Actions**, then **Actions → Publish reviewed workshop → Run workflow** on `main`. The expected URL is `https://rh-aelgendy.github.io/acm-fleet-workshop/`; it is not live until Pages is enabled and that workflow succeeds. Publication is manual so a personalized local profile cannot be accidentally used by CI.
+To publish the reviewed generic guide, select **Settings → Pages → Source: GitHub Actions**, then **Actions → Publish reviewed workshop → Run workflow** on `main`. The expected URL is `https://rh-aelgendy.github.io/acm-fleet-workshop/`; it is not live until Pages is enabled and that workflow succeeds. Publication uses only the generic playbook; ignored personalized profiles are not uploaded. Updates to main automatically rebuild the website once Pages is enabled.
