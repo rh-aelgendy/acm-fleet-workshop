@@ -109,3 +109,11 @@ Record the selected cluster, observed status and any skipped step in your sessio
 == Clean up or hand over
 
 Follow xref:appendix-cleanup.adoc[Cleanup and ownership] for this module. Do not remove shared operators or another participant’s resources.
+
+== Alternative: deploy, expand, scale and move
+
+The separate link:https://github.com/rh-aelgendy/acm-applications-demo/blob/main/dispatch-desk/README.md[Dispatch Desk walkthrough] uses ACM Placement and OpenShift GitOps without AAP or the custom mobility gateway. It includes public application manifests, preparation, UI steps, fallbacks and cleanup.
+
+Deploy the stateless frontend and quote engine to one cluster, select both clusters to expand, increase replica counts in the ApplicationSet, validate the destination, then deselect the source. Unlike the original mobility app, this ApplicationSet deliberately deletes its owned source workloads on deselection. Each cluster has its own endpoint; private ingress requires an approved viewing connection. It does not migrate traffic or persistent data.
+
+The example can start on cloud and move to a simulated on-premises destination. With two ARO clusters this illustrates the workflow; it is not an actual on-premises compatibility test. Local tests pass, but live API validation and the two-cluster rehearsal are still pending.
