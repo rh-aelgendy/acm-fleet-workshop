@@ -119,3 +119,12 @@ The separate link:https://github.com/rh-aelgendy/acm-applications-demo/blob/main
 Deploy the stateless frontend and quote engine to one cluster, select both clusters to expand, increase replica counts in the ApplicationSet, validate the destination, then deselect the source. Unlike the original mobility app, this ApplicationSet deliberately deletes its owned source workloads on deselection. Each cluster has its own endpoint; private ingress requires an approved viewing connection. It does not migrate traffic or persistent data.
 
 The example can start on cloud and move to a simulated on-premises destination. With two ARO clusters this illustrates the workflow; it is not an actual on-premises compatibility test. Live API validation and a two-cluster rehearsal passed on the original ARO fleet on 2026-10-05, including automatic deployment, matching quotes, replica scaling, source retirement and reset. Validate other fleets separately. Follow the linked guide’s *Short customer demo* for the five-step label-driven flow; manual synchronization is not required.
+
+=== Short Dispatch Desk presentation
+
+. Open the application's Azure Route. Show *One platform. Run anywhere.*, the *Azure* deployment location and a Regional, 3 kg quote of €14.
+. State the requirement to move the application back on-premises. In *ACM → Infrastructure → Clusters → destination → Labels*, add `demo.acm.example.com/dispatch=true`. Keep Azure selected while the destination starts.
+. In *ACM → Applications*, inspect `dispatch-desk`; use *ACM → Search* for the generated Application if per-cluster status is needed. Wait for Synced/Healthy, then open the destination Route. Show *On-premises* and the same quote. Synchronization is automatic.
+. Remove only the dispatch label from the Azure source. Its owned application resources are removed while the destination keeps running.
+
+Prepare route connectivity before presenting: private HCP ingress requires a browser on an approved connected network. Local viewing tunnels are optional rehearsal aids, not cloud application URLs. The page location is a configured demonstration role; both rehearsal clusters are ARO and Edge is illustrative. Keep migration limitations and setup instructions in the facilitator explanation, not the customer application page.
