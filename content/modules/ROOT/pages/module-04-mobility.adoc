@@ -37,10 +37,12 @@ From the hub console, open **Networking → Routes → project `acm-demo-gateway
 == 2. Select and deploy the cloud destination
 
 . In **ACM → Infrastructure → Clusters → {destination-cluster} → Labels**, set `demo.acm.example.com/mobility=true`.
-. In hub **Home → API Explorer → PlacementDecision → Instances → {gitops-namespace}**, filter by `cluster.open-cluster-management.io/placement=retail-mobility`. Confirm both clusters are selected.
+. Open **ACM → Search** and enter `kind:PlacementDecision namespace:{gitops-namespace}`. Select a result belonging to the **hub**, open its resource details/YAML, and check the label `cluster.open-cluster-management.io/placement: retail-mobility`. Read `status.decisions` across the matching objects and confirm both clusters are selected. The namespace is a search filter, not a navigation page. Do not edit the generated PlacementDecision.
 . Open **ACM → Applications → retail-mobility-{destination-cluster} → Argo CD**. Inspect source `retail/overlays/mobility` and destination namespace `acm-demo-mobility`.
 . Choose **Sync → Synchronize**, prune disabled. Wait for Synced / Healthy and inspect storefront, catalog and order-quote.
 . Return to **ACM → Governance**. Confirm `namespace-baseline` and `production-workload-standards` are Compliant for the spoke.
+
+**Search fallback:** If the resource is not indexed or its YAML cannot be opened, use the authenticated hub CLI: `oc get placementdecisions -n {gitops-namespace} -l cluster.open-cluster-management.io/placement=retail-mobility -o yaml`. Inspect `status.decisions`; an empty Search result alone does not mean no cluster was selected.
 
 **Say:** “ACM selects an eligible destination; GitOps deploys the same application; governance provides the evidence for our handover decision.”
 

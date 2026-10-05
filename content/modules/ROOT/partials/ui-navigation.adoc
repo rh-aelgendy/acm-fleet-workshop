@@ -1,5 +1,5 @@
 In the ACM fleet perspective, use *Infrastructure → Clusters*, *Search*, *Governance* and *Applications*.
-For hub resources, switch to the hub's local OpenShift console and use *Home → API Explorer → resource kind → Instances*. Select the stated namespace before editing.
+For hub resources, use *ACM → Search* with `kind:<resource-kind> namespace:<namespace>`. Select the hub result and open its resource details/YAML. Verify the cluster and namespace before editing. If the kind is not indexed or the resource cannot be opened, use read-only CLI inspection; do not interpret a missing Search result as an absent resource.
 For a spoke resource, follow *ACM → Infrastructure → Clusters → cluster → Console*. A hub YAML editor does not edit a spoke.
 Argo CD handles sync and resource trees; ACM supplies fleet context. Menu wording varies with installed plugins.
 
