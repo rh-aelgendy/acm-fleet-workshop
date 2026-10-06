@@ -56,3 +56,7 @@ The mobility gateway is workshop integration, not native ACM traffic management.
 * *Checkpoint*: capture the selected scope and result without credentials.
 
 This is a community workshop, not an official product certification or support statement. The guide uses Antora/AsciiDoc and the Showroom theme. Product support is determined by the applicable Red Hat support matrix.
+
+== Focused one-hour customer session
+
+Follow xref:session-60-minutes.adoc[Payments self-service, Azure identities, GitOps placement and observability] for one ordered story, exact UI navigation and opening-state gates.

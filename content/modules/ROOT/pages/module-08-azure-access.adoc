@@ -1,12 +1,14 @@
-= Module 8 — Request approved Azure access from the hub
+= Lab 8 — Request approved Azure access from the hub
 
 include::partial$environment.adoc[]
 
-**Objective of this lab/demo:** Submit a small approved request through the hub console and watch ACM coordinate ASO-created identity, federation, scoped Azure access and a verified workload on the spoke.
+**Objective of this lab/demo:** Manage identity growth through an approved workload-access contract: inspect ownership and scope centrally, reject excessive access, accept a small request, and follow ACM/ASO reconciliation through real Azure access proof.
 
-**Time:** 10–12 minutes plus Azure propagation. **Starting state:** platform prerequisites prepared; `payments-access-plan` reports AwaitingRequest / NotRequested. The submission creates real Azure resources and incurs the module's normal charges. Choose this lab during preparation; do not enable an unprepared cloud integration in the meeting.
+**Time:** 12–15 minutes plus Azure propagation. **Starting state:** platform prerequisites prepared. Choose a fresh-request track (plan AwaitingRequest / NotRequested) or an existing-request track (plan Provisioned with current access proof). The fresh submission creates real Azure resources and incurs the module's normal charges. Choose this track during preparation; do not enable an unprepared cloud integration in the meeting.
 
 This is a custom request contract, not a built-in ACM service catalog. The request is pre-approved by template/admission rules; there is no human approval queue. A presenter using admin credentials demonstrates the workflow, not a developer SSO boundary. xref:appendix-facilitator.adoc[Preparation and cleanup].
+
+**Identity inventory scope:** this centrally governs identities represented by the platform's ASO resources and ACM policies. It does not automatically discover or govern every managed identity in an Azure subscription. Client IDs are public identifiers; Azure credentials and private token material are never shown. The independent `payments-workload-identity` policy uses a placeholder and is not the real access proof in this lab.
 
 == 1. Show the platform's control point
 
@@ -16,25 +18,30 @@ Open **ACM → Governance → Policies**, filter namespace `acm-demo-payments-ca
 * `payments-approved-azure-workload`: identity configuration and reader on the spoke.
 * `payments-approved-access-verified`: successful access proof.
 
-In the **hub local console → Workloads → ConfigMaps → acm-demo-payments-catalog → payments-access-plan → YAML**, show the current state.
+In **ACM Search**, use `kind:ConfigMap namespace:acm-demo-payments-catalog name:payments-access-plan` and select the **hub** result. Open its details/YAML. The reliable local alternative is **hub console → Workloads → ConfigMaps → project acm-demo-payments-catalog → payments-access-plan → YAML**.
+
+Show `accessProfile`, `allocatedCluster`, `workloadNamespace`, `federatedSubject` and `azureRole` when the request is provisioned. Compare this contract with the three named ACM policies; leave their existing Enforce/Inform modes unchanged.
 
 **Say:** “The team asks for a capability. The platform supplies the identity, scope and federation without handing over Azure credentials.”
 
-**Expected:** AwaitingRequest / NotRequested before submission. **Value:** A central, inspectable workflow. **Fallback:** If already provisioned, present the existing outcome and skip new submission; do not withdraw access merely to recreate a starting slide.
+**Expected:** Fresh track: AwaitingRequest / NotRequested. Existing track: ApprovedTemplateReady / Provisioned. **Value:** A central, inspectable workflow. **Fallback:** If already provisioned, present the existing outcome and skip new submission; do not withdraw access merely to recreate a starting slide.
 
 == 2. Demonstrate the approved input boundary
 
-Open **hub + → Import YAML** and paste the complete xref:attachment$self-service-approved-access-request-denied.yaml[denied request]. It requests `subscription-owner`. Click **Create** and show the named admission rejection. If the request already exists, use its YAML editor to attempt the same `data.accessProfile` change; the save must be rejected.
+First check **hub console → Workloads → ConfigMaps → project acm-demo-payments-requests** for `payments-access-request`.
+
+* **Request absent:** open **hub + → Import YAML**, paste the complete xref:attachment$self-service-approved-access-request-denied.yaml[denied request], and click **Create**. It requests `subscription-owner`; creation must be rejected.
+* **Request present:** open **payments-access-request → YAML**, change only `data.accessProfile` from `payments-blob-reader` to `subscription-owner`, and click **Save**. The named admission rule must reject the update. Discard that unsaved editor change and reopen the resource to confirm the stored profile is still `payments-blob-reader`. Do not delete the working request.
 
 **Say:** “The team cannot turn a Blob reader request into subscription ownership.”
 
-**Expected:** Rejection by the request's ValidatingAdmissionPolicy, no accepted override. **Value:** Constrained self-service. **Fallback:** A Forbidden response from RBAC or an AlreadyExists response is not proof of the admission rule; inspect the relevant policy in hub API Explorer and use rehearsal evidence if necessary.
+**Expected:** Rejection naming `acm-demo-payments-approved-request`; no accepted override. **Value:** Constrained self-service. **Fallback:** A Forbidden response from RBAC or an AlreadyExists response is not proof of the admission rule. Use **ACM Search → `kind:ValidatingAdmissionPolicy name:acm-demo-payments-approved-request`** for the hub admission definition, or the xref:appendix-azure-design.adoc[platform YAML]. Preserve the current working request if its edit cannot be demonstrated.
 
 == 3. Submit the approved request through the console
 
 For a fresh run, use **hub + → Import YAML** with the complete xref:attachment$self-service-approved-access-request-approved.yaml[approved request]:
 
-[source,yaml,subs="attributes+"]
+[source,yaml]
 ----
 apiVersion: v1
 kind: ConfigMap
@@ -49,8 +56,9 @@ data:
   accessProfile: payments-blob-reader
 ----
 
+Click **Create**. If the exact approved request already exists, inspect its three stored values instead of creating a duplicate; its prior provisioning is the existing-request track. Open the plan ConfigMap again and follow `requestState: ApprovedTemplateReady` / `azureState: Provisioning` toward **`azureState: Provisioned`**. “ApprovedTemplateReady” does not change to “Provisioned”; these are different fields.
 
-Click **Create**. If the exact approved request already exists, inspect it instead of creating a duplicate. Open the plan ConfigMap again and follow ApprovedTemplateReady / Provisioning toward Provisioned.
+Saving this request is the only live trigger. ACM's already-installed policies and ASO reconcile continuously; there is no presenter-side submit script. If Azure is still progressing after a few minutes, continue the GitOps placement section and return to this proof before closing.
 
 **Say:** “No client ID or role ARN is copied by the team. The controllers derive and reconcile the approved resources.”
 
@@ -58,27 +66,23 @@ Click **Create**. If the exact approved request already exists, inspect it inste
 
 == 4. Inspect the Azure dependency chain
 
-In **hub → Home → API Explorer → Instances**, project `acm-demo-payments-catalog`, inspect:
+Use **ACM → Governance → payments-approved-access-plan → Results / template details / related objects** to inspect the ASO resources on the **hub**. Use these exact ACM Search queries if the custom kinds are indexed; otherwise keep the related-object view and show the desired xref:attachment$self-service-approved-access-aso-resources.example.yaml[ASO definitions]. An absent custom-kind Search result does not mean Azure provisioning failed.
 
 [cols="1,1",options="header"]
 |===
-|Resource
-|Name / evidence
-
-|UserAssignedIdentity
-|`payments-api`; Ready=True for current generation
-
-|FederatedIdentityCredential
-|`payments-api-spoke`; issuer, subject and audience
-
-|RoleAssignment
-|Generated UUID name; intended Blob reader role and container scope
-
-|ConfigMap
-|`payments-identity`; ASO-exported clientId, principalId and tenantId
-
+|Hub query / resource
+|Evidence to point to
+|`kind:UserAssignedIdentity namespace:acm-demo-payments-catalog name:payments-api`
+|Ready=True with observedGeneration matching metadata.generation; platform-owned identity
+|`kind:FederatedIdentityCredential namespace:acm-demo-payments-catalog name:payments-api-spoke`
+|Verified spoke issuer, exact subject `system:serviceaccount:acm-demo-payments-cloud:payments-blob-reader`, audience `api://AzureADTokenExchange`
+|`kind:RoleAssignment namespace:acm-demo-payments-catalog`
+|Follow only the assignment named in this policy; UUID name, Storage Blob Data Reader role, Payments container scope
+|`kind:ConfigMap namespace:acm-demo-payments-catalog name:payments-identity`
+|ASO-exported clientId, principalId and tenantId; public IDs, not passwords
 |===
 
+Then search **`kind:ServiceAccount namespace:acm-demo-payments-cloud name:payments-blob-reader`**, select the **spoke** result and compare its `azure.workload.identity/client-id` annotation with the exported hub client ID. In the reader Deployment, inspect the workload-identity Pod label and serviceAccountName. Follow `payments-approved-azure-workload` to see that ACM wires the approved identity to this selected workload, rather than copying an Azure credential into Git.
 
 Use ACM policy related objects if navigation differs. Do not open operator Secrets.
 
@@ -95,7 +99,7 @@ In **ACM Search**, find `kind:Deployment namespace:acm-demo-payments-cloud name:
 * `otherTeamHTTP: 403`
 * `otherTeamError: AuthorizationPermissionMismatch`
 
-Return to **Governance → payments-approved-access-verified** and inspect compliance for the submitted request.
+Return to **Governance → Policies → namespace acm-demo-payments-catalog → payments-approved-access-verified → Results** and inspect compliance with the request present. This policy checks reader availability. The reader's readiness probe is tied to its own 200/403 checks; the policy does not independently call Azure. Current logs are the detailed data-plane evidence.
 
 **Say:** “We check the real access outcome, including denial outside the approved scope. An annotation alone would not prove this.”
 
@@ -105,8 +109,8 @@ Leave the request in place for discussion. Withdrawal removes the demo workload,
 
 == Checkpoint
 
-Record the selected cluster, observed status and any skipped step in your session notes. A saved object or green policy alone does not prove every dependency is ready.
+Record the exact cluster, namespace, current status and any skipped step. A saved object alone does not prove reconciliation completed.
 
 == Clean up or hand over
 
-Follow xref:appendix-cleanup.adoc[Cleanup and ownership] for this module. Do not remove shared operators or another participant’s resources.
+Use xref:appendix-cleanup.adoc[Cleanup and ownership] after the session. Preserve shared operators and restore only the changed module state.

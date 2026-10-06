@@ -1,0 +1,77 @@
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: payments-team
+  labels:
+    demo.acm.example.com/id: aro-retail
+  namespace: openshift-gitops
+spec:
+  clusterSets:
+  - default
+  predicates:
+  - requiredClusterSelector:
+      labelSelector:
+        matchLabels:
+          demo.acm.example.com/id: aro-retail
+          demo.acm.example.com/payments: 'true'
+          name: aro-hcp-spoke
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: acm-demo-payments
+  labels:
+    demo.acm.example.com/id: aro-retail
+  namespace: openshift-gitops
+spec:
+  sourceRepos:
+  - https://github.com/rh-aelgendy/acm-applications-demo.git
+  destinations:
+  - name: aro-hcp-spoke
+    namespace: acm-demo-payments
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+  - group: apps
+    kind: Deployment
+  - group: ''
+    kind: Service
+  - group: ''
+    kind: ConfigMap
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: acm-demo-payments
+  labels:
+    demo.acm.example.com/id: aro-retail
+  namespace: openshift-gitops
+spec:
+  generators:
+  - clusterDecisionResource:
+      configMapRef: demo-placement-generator
+      labelSelector:
+        matchLabels:
+          cluster.open-cluster-management.io/placement: payments-team
+      requeueAfterSeconds: 10
+  syncPolicy:
+    preserveResourcesOnDeletion: true
+  template:
+    metadata:
+      name: payments-{{name}}
+      labels:
+        demo.acm.example.com/id: aro-retail
+    spec:
+      project: acm-demo-payments
+      source:
+        repoURL: https://github.com/rh-aelgendy/acm-applications-demo.git
+        targetRevision: main
+        path: payments
+      destination:
+        name: '{{name}}'
+        namespace: acm-demo-payments
+      syncPolicy:
+        automated:
+          prune: false
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=false

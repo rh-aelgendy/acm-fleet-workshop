@@ -37,3 +37,9 @@ For another environment, work on a separate checkout/configuration and inspect t
 == Release gate
 
 Do not call this universally reproducible until the xref:appendix-validation.adoc[acceptance checklist] passes on a fresh hub and spoke. Build and link checks prove the guide renders; they do not prove infrastructure readiness.
+
+== Focused one-hour preparation
+
+Follow xref:session-60-minutes.adoc[the session gates]. Prepare Payments before approved access. Choose the existing-request track to retain provisioned identity evidence. Preparing a fresh request is a backstage operation that withdraws real Azure access dependencies; wait for AwaitingRequest / NotRequested before the audience arrives. Do not reset Payments afterward, since that can reset the extension. Do not run a global reset simply to review documentation.
+
+Verify browser logins for hub, GitOps Route and private spoke, named Perses tiles, the production selection label and the canary/reporting opening state. Configure and test a human SSO group separately if presenting developer isolation. Keep placeholder annotation and cluster provisioning exercises outside this hour. Restore only changed module state afterward.

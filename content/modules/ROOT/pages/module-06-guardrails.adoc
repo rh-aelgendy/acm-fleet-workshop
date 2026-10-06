@@ -19,7 +19,7 @@ Open **ACM → Governance → Policies → namespace `{policy-namespace}` → re
 . Select `regulated-cert-manager` → **Actions → set remediation to Enforce**. If the action is unavailable, edit the **root Policy YAML**, setting `spec.remediationAction: enforce` and the embedded OperatorPolicy's remediationAction to `enforce`. Leave the approved CSV/version list and `upgradeApproval: None` unchanged.
 . Watch per-cluster results and OperatorPolicy conditions. On the managed console, inspect **Operators → Installed Operators** and the approved CSV's Succeeded state.
 . Wait for cert-manager controllers and its Certificate API before the next step. A saved policy is not a completed operator installation.
-. Set `regulated-certificate` to Enforce through the same Policy action/YAML editor. Inspect the generated Issuer and Certificate through related resources or managed-console **API Explorer → Certificate → acm-demo-regulated → retail-demo**.
+. Set `regulated-certificate` to Enforce through the same Policy action/YAML editor. Inspect the generated Issuer and Certificate through related resources or **ACM Search → `kind:Certificate namespace:acm-demo-regulated name:retail-demo`**, selecting the intended cluster.
 
 **Say:** “One centrally approved desired state supplies the capability on selected clusters, then proves it can issue an application certificate.”
 
@@ -30,7 +30,7 @@ Open **ACM → Governance → Policies → namespace `{policy-namespace}` → re
 . Open **ACM Governance → regulated-service-guardrail → Edit policy / YAML**. This policy is already Enforce because ACM maintains the admission objects.
 . Within `spec.policy-templates`, locate the ConfigurationPolicy object template whose `objectDefinition.kind` is `ValidatingAdmissionPolicyBinding` and name is `acm-demo-approved-service-types`.
 . Change that binding's desired `spec.validationActions` from `[Warn, Audit]` to `[Deny, Audit]`. Keep its `complianceType: mustonlyhave`, namespace selector and other fields unchanged. Save the root ACM Policy.
-. Wait for Compliant, then inspect the **managed cluster's** binding through API Explorer. Confirm actual actions are **Deny + Audit**, the ValidatingAdmissionPolicy has no CEL type-check warnings, and `acm-demo-regulated` has the demo and regulated labels.
+. Wait for Compliant, then inspect the **managed cluster's** binding through ACM Search (`kind:ValidatingAdmissionPolicyBinding`) and its related policy. Confirm actual actions are **Deny + Audit**, the ValidatingAdmissionPolicy has no CEL type-check warnings, and `acm-demo-regulated` has the demo and regulated labels.
 
 **Say:** “ACM distributes the rule; each Kubernetes API server enforces it when a request arrives.”
 

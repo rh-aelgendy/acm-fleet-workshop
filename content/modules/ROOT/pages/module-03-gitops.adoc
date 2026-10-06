@@ -1,61 +1,107 @@
-= Module 3 — Deploy by fleet intent with GitOps
+= GitOps placement — expand production through ACM
 
 include::partial$environment.adoc[]
 
-*Time:* 10–15 minutes. Starting state: development/production Applications Healthy, registration and Placement integration prepared.
+**Objective of this lab/demo:** Add a production application destination by changing cluster metadata in ACM, then verify that the ApplicationSet and Argo CD reconcile the Git-defined workload.
 
-**Objective of this lab/demo:** Add a deployment destination by changing cluster metadata, with GitOps providing the application definition.
+**Time:** 10–12 minutes. **Starting state:** development healthy on `{source-cluster}`, production healthy on `{destination-cluster}`; the hub's `demo.acm.example.com/retail-prod` label is `false`. The hub Argo CD Route is reachable and signed in before the session.
 
-**Introduction:** “ACM selects where the application belongs. The hub's Argo CD reconciles what Git says should run. A pull architecture moves that reconciliation into each managed cluster.”
+**Introduction:** “ACM selects where the application belongs. OpenShift GitOps delivers the approved configuration from Git.”
 
 [cols="1,1,1",options="header"]
 |===
 |
-|Push — this demo
+|Push — deployed here
 |Pull — discussion
-
-|Deployment controller
+|Reconciliation controller
 |Central Argo CD on the hub
 |Argo CD on each managed cluster
-
-|ACM's role
-|Select clusters for generated Applications
+|ACM responsibility
+|Select destinations for generated Applications
 |Select clusters and distribute Application definitions
-
 |Useful when
-|A central platform team manages connected clusters
-|Reconciliation and responsibilities need to be distributed
-
+|A platform team centrally operates connected clusters
+|Teams need distributed execution and local reconciliation
 |Connectivity
-|Hub controller accesses destination APIs
-|Local controller accesses its API; ACM and Git connectivity are still required
-
+|Central controller must reach destination APIs
+|Local Argo needs Git and its cluster API; fleet management connectivity still matters
 |Operational trade-off
-|Fewer controllers, central permissions
-|More controllers, local execution
-
+|Fewer controllers, central credentials
+|More controllers, local responsibilities
 |===
 
+Both models read Git. **Automatic versus manual sync is a separate setting.** Development uses automatic sync; production uses manual sync. This is label-driven placement, not cluster provisioning. Another region can be selected by the same pattern after connectivity and prerequisites are checked; record the real regions of your environment.
 
-Both models read desired configuration from Git. Automatic versus manual sync is a separate choice. Only push is deployed in this workshop.
+== 1. Identify the application objects
 
-. Open **ACM → Applications → retail-development-{source-cluster} → Argo CD**. Inspect Git source, destination and automatic sync. Development has one replica per service.
-. Open `retail-production-{destination-cluster}`. Production has two replicas and manual synchronization. Both use the public link:https://github.com/rh-aelgendy/acm-applications-demo[application repository]; the private presenter repository is not a runtime source.
-. In the **hub** API Explorer, open `Placement` → namespace `{gitops-namespace}` → `retail-production`. Show the selector `demo.acm.example.com/retail-prod=true`.
-. Return to **ACM → Infrastructure → Clusters → {source-cluster} → Labels**. Set `demo.acm.example.com/retail-prod` to `true` and save.
-. In the hub API Explorer, list `PlacementDecision` in `{gitops-namespace}`, filtered by `cluster.open-cluster-management.io/placement=retail-production`. Its decision list should now include both clusters. Do not edit this generated result.
-. Return to **ACM → Applications**. Open the newly generated `retail-production-{source-cluster}` → **Argo CD → Sync → Synchronize**, leaving prune disabled. Wait for **Synced / Healthy** and inspect its resource tree.
+Open **ACM → Applications**. Find the ApplicationSet rows **`retail-development`** and **`retail-production`**. Use View to inspect their Git source and cluster coverage. Do not expect the per-cluster names to be list rows.
 
-**Say:** “One cluster label expanded the deployment. We did not edit a static cluster list or copy the application by hand.”
+Open **ACM → Search** and enter `kind:Application namespace:{gitops-namespace}`. Locate these hub resources:
 
-**Expected:** Production retail runs on both selected clusters after sync. **Customer value:** Repeatable application distribution as the fleet grows. **Fallback:** Inspect ApplicationSet `retail-production` conditions and its PlacementDecision. If the Application exists but is not healthy, inspect Argo's sync result instead of applying workloads manually.
+[cols="1,1,1,1",options="header"]
+|===
+|Generated Application
+|Destination
+|Git path
+|Behavior
+|`retail-development-{source-cluster}`
+|Hub, `acm-demo-dev`
+|`retail/overlays/development`
+|Automatic sync, one replica per service
+|`retail-production-{destination-cluster}`
+|Spoke, `acm-demo-prod`
+|`retail/overlays/production`
+|Manual sync, two replicas per service
+|===
 
-Continue to xref:module-04-mobility.adoc[lab 4: mobility], then xref:module-05-operations.adoc[lab 5: operations].
+Inspect the existing Application YAML's `spec.destination`, `spec.source` and `spec.syncPolicy`. Source repository is the public `acm-applications-demo` repository; the presenter repository can remain private.
+
+**Say:** “The ApplicationSet is the fleet-level definition. It creates one Argo Application for each selected destination.”
+
+**Expected:** Both generated Applications Synced / Healthy. **Value:** Fleet intent and per-cluster delivery are visible separately. **Fallback:** Use the signed-in Argo Applications list if Search has not indexed these hub resources.
+
+== 2. Find the correct placement
+
+In **ACM → Search**, use `kind:Placement namespace:{gitops-namespace} name:retail-production`. Select the hub result and inspect its YAML. Its selector requires `demo.acm.example.com/retail-prod: 'true'`.
+
+Now search `kind:PlacementDecision namespace:{gitops-namespace}`. Add the label filter `label:cluster.open-cluster-management.io/placement=retail-production` if supported by autocomplete; otherwise open each candidate and check its `metadata.labels` yourself. Only follow decision objects whose Placement label is **`retail-production`**. Read `status.decisions` across all matching shards. Initially it contains `{destination-cluster}`.
+
+**Say:** “Placement is our selection rule. PlacementDecision records the controller's current answer.”
+
+**Expected:** Spoke selected; other decision rows belong to other exercises. **Value:** Dynamic selection without a static list in the ApplicationSet. **Fallback:** Show the Placement selector and current Application destinations. An unindexed Search result is not proof that a PlacementDecision is missing. Never edit generated decisions.
+
+== 3. Expand production from ACM
+
+Open **ACM → Infrastructure → Clusters → {source-cluster} → Labels**. Set **only** `demo.acm.example.com/retail-prod=true` and save. Keep the spoke selected.
+
+Return to the matching PlacementDecision and wait for both cluster names. Then use **ACM Search → `kind:Application namespace:{gitops-namespace} name:retail-production-{source-cluster}`**. Inspect its source and destination. It may be OutOfSync/Missing before first manual synchronization; that is expected.
+
+**Say:** “One label adds an eligible cluster. ACM feeds that decision to the ApplicationSet controller.”
+
+**Expected:** New generated Application exists; no static cluster list was edited. **Value:** Repeatable distribution as the fleet grows. **Fallback:** Inspect ApplicationSet conditions and matching decision labels. If no Application is generated, stop before synchronization and report the last valid checkpoint.
+
+== 4. Synchronize through the actual GitOps controller
+
+Use the hub console's **Networking → Routes → project `{gitops-namespace}` → openshift-gitops-server → Location** to open Argo CD. Authenticate using the prepared login. Filter the Applications list to **`retail-production-{source-cluster}`**.
+
+Open it → **Sync → Synchronize**. Leave **Prune** and **Force** disabled. Wait for **Synced / Healthy** and inspect storefront, catalog and order-quote in the resource tree.
+
+**ACM's Applications list on this installation has View, Edit, Search and Delete, not Sync.** Do not waste time looking for an unverified Argo link there. ACM supplies fleet placement; Argo CD performs synchronization.
+
+**Expected:** Production running on both destinations. **Value:** Reviewed Git configuration delivered to a centrally selected cluster. **Fallback:** If Argo is inaccessible, show the new Application and explain that placement succeeded but delivery is not yet verified. Do not apply workloads manually and call it GitOps.
+
+== 5. Close and hand over
+
+Return to **ACM → Applications → retail-production** and **ACM Search** to show both generated Applications. Confirm health and destination namespaces.
+
+**Say:** “We expanded deployment through fleet metadata and verified the delivery controller's outcome.”
+
+**Expected:** Both Applications healthy. **Fallback:** Record sync errors and leave the original healthy spoke unchanged. Removing the hub selection label later removes the generated Application but **preserves its workloads** in this ApplicationSet; use the facilitator's scoped reset after the meeting. Label removal is not this example's cleanup proof.
 
 == Checkpoint
 
-Record the observed cluster selection and health/compliance result. Explain which controller changed which object.
+Record the exact cluster, namespace, current status and any skipped step. A saved object alone does not prove reconciliation completed.
 
 == Clean up or hand over
 
-Continue to the next selected module, or follow xref:appendix-cleanup.adoc[Cleanup and ownership].
+Use xref:appendix-cleanup.adoc[Cleanup and ownership] after the session. Preserve shared operators and restore only the changed module state.

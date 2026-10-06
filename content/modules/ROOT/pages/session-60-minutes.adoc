@@ -1,0 +1,126 @@
+= One-hour ACM session — Payments self-service and fleet operations
+
+include::partial$environment.adoc[]
+
+**Objective of this lab/demo:** Show how a platform team centrally governs a growing fleet, delegates application access, supplies approved Azure workload identities, places GitOps applications and uses fleet metrics to investigate failures and unused capacity.
+
+**Customer story:** “Payments needs to deploy applications and read its cloud data. As teams and clusters multiply, the platform needs consistent identity ownership, access boundaries, deployment decisions and operational evidence.”
+
+This is the presenter path for the full hour. Use the named module steps below; preparation and cleanup are in the xref:appendix-facilitator.adoc[facilitator runbook]. No Python, shell submission or hidden migration script is a stakeholder action. ACM is the control point; ASO performs Azure operations, Argo CD performs Git reconciliation, and the managed console supplies local logs and workload edits when needed.
+
+== Timing and sequence
+
+[cols="1,1,1",options="header"]
+|===
+|Minutes
+|Screen / module
+|Customer outcome
+|0–4
+|ACM Infrastructure → Clusters
+|Establish the two-cluster fleet and controller responsibilities
+|4–12
+|xref:module-07-payments.adoc[Payments onboarding], steps 1–3
+|Show team allocation, namespace controls and GitOps boundaries
+|12–27
+|xref:module-08-azure-access.adoc[Approved identity self-service], steps 1–5
+|Reject excessive access, accept the approved request, follow the real identity chain and prove 200/403 access
+|27–39
+|xref:module-03-gitops.adoc[GitOps placement], steps 1–5
+|Add a production destination through an ACM cluster label and synchronize in Argo CD
+|39–55
+|xref:module-05-operations.adoc[Observability], steps 1–4
+|Locate a bounded workload failure, recover it and demonstrate released resource reservations
+|55–60
+|ACM Governance, Applications and dashboard
+|Recap observed evidence and take questions
+|===
+
+If Azure provisioning is still progressing after the request is accepted, move to the GitOps section and return to identity proof before closing. Do not spend the hour watching a spinner. Keep the optional placeholder-annotation exercise and cluster provisioning out of this session.
+
+== Before admitting the audience
+
+The facilitator verifies these gates in the UI. Do not run broad reset scripts after choosing the session's opening state.
+
+[cols="1,1",options="header"]
+|===
+|Gate
+|Expected
+|Cluster access
+|Both Available; hub, Argo CD and private spoke console logins work in the browser
+|Team baseline
+|`payments-team-baseline` in `acm-demo-payments`: Compliant
+|Team app
+|ApplicationSet `acm-demo-payments`; generated `payments-{destination-cluster}`: Synced / Healthy
+|Azure request — fresh track
+|`payments-access-request` absent; plan AwaitingRequest / NotRequested; ASO and admission prerequisites ready
+|Azure request — existing track
+|Request present; plan Provisioned; reader Ready with current 200/403 proof. Follow the existing-request branch; never delete it in the meeting to force a fresh start
+|Placement
+|`retail-development` selects the hub; `retail-production` selects only the spoke; hub `demo.acm.example.com/retail-prod=false`
+|Observability
+|Central Perses dashboards render; cluster filter set to the spoke for the reporting example; analytics history available or warming explicitly acknowledged
+|Isolated workloads
+|Spoke `availability-canary`: 1 available replica; `retail-reporting`: 1 available, requests 250m / 256Mi
+|===
+
+== Navigation card — keep this beside the demo
+
+[cols="1,1",options="header"]
+|===
+|Need
+|Exact resource / discovery path
+|Policy list
+|ACM → Governance → Policies; filter the stated namespace and exact policy name
+|Team governance Placement
+|ACM Search: `kind:Placement namespace:acm-demo-payments name:payments-team`
+|Team application Placement
+|ACM Search: `kind:Placement namespace:{gitops-namespace} name:payments-team` — a different object
+|Production decision
+|ACM Search: `kind:PlacementDecision namespace:{gitops-namespace}`; inspect only labels `cluster.open-cluster-management.io/placement: retail-production`
+|Argo CD controller
+|Hub console → Networking → Routes → project `{gitops-namespace}` → `openshift-gitops-server` → Location
+|Identity request / plan
+|Hub console → Workloads → ConfigMaps → `acm-demo-payments-requests` / `acm-demo-payments-catalog`
+|Dashboard
+|Hub console → Observe → Dashboards → `ACM Clusters Overview`, `ARO Retail — Right-sizing opportunity`, `ACM Right-Sizing Namespace`
+|===
+
+Use **ACM Search**, not API Explorer. Many PlacementDecisions are expected: match the Placement label, not the first row. PlacementDecisions live on the hub; their `status.decisions[].clusterName` identifies workload destinations. An ACM Applications row is usually the ApplicationSet (`retail-production`), while the generated Argo Application (`retail-production-{destination-cluster}`) is found through Search or Argo CD. Your ACM list has View/Edit/Search/Delete; synchronization is in Argo CD.
+
+== Opening and transitions
+
+**Opening:** “The hub is our fleet control point. Policies maintain standards, Placement selects destinations, GitOps deploys applications, and observability tells us what happened.” Show `{source-cluster}` and `{destination-cluster}`. State the actual infrastructure and regions of your fleet. Do not describe two same-region cloud clusters as physical on-premises or multi-region deployments.
+
+**Into teams:** “A new team should receive a prepared boundary, not cluster-admin.” Follow Payments steps 1–3; inspect actual RoleBinding subjects. The presenter fleet uses an administrator and service-account test evidence; configure and test a developer SSO group if demonstrating a human team login. Do not switch an admin persona and claim it proves tenant isolation.
+
+**Into identities:** “As identities grow, we need to know who owns each one, which workload can use it, and exactly which data it may read.” Follow the approved-access guide. The three-field request is the audience-visible trigger. ACM and ASO reconcile after it is saved; no presenter-side submit command runs.
+
+**Into placement:** “The application definition stays in Git. The platform changes where it belongs through cluster metadata.” Follow the GitOps guide; synchronize only the newly generated production Application.
+
+**Into operations:** “Delivery is only successful when we can observe availability, diagnose a problem and understand capacity.” Follow the observability guide. ACM fleet views lead the investigation; the spoke console supplies the canary's detailed logs and explicit edits. Do not imply ACM contains a native Pod-log viewer or that editing hub YAML edits a spoke object.
+
+== Closing evidence
+
+[cols="1,1",options="header"]
+|===
+|Question
+|Evidence to show
+|Can teams request access safely?
+|Named admission rejection for `subscription-owner`, accepted approved request
+|Who creates and wires identities?
+|ACM plan → ASO Ready conditions → exported public client ID → spoke ServiceAccount
+|Is access scoped?
+|Reader's current Payments HTTP 200 and other-team HTTP 403 with AuthorizationPermissionMismatch
+|Can deployment follow fleet intent?
+|Label → matching PlacementDecision → generated Application → Synced / Healthy
+|Can we operate the fleet?
+|Central dashboards, canary failure/recovery, reporting request decrease with health preserved
+|===
+
+**Say:** “We made the decisions centrally and verified each controller's result. The same operating model scales to additional teams and eligible clusters.”
+
+**Fallback:** Report the last verified checkpoint for an incomplete operation. A green no-request policy, an accepted request, an ASO object, or a saved label alone is not the final business outcome. Unrelated retail/ASO/ROSA policy violations are outside these named module scopes; do not enforce every visible policy to clean the dashboard.
+
+== What was reviewed
+
+Use the xref:appendix-validation.adoc[acceptance checklist] to record your environment’s evidence and browser rehearsal gates. This guide is not proof that a new environment has been installed or visually rehearsed.

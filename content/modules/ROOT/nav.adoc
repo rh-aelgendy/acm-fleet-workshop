@@ -1,4 +1,5 @@
 * xref:index.adoc[Welcome and learning path]
+* xref:session-60-minutes.adoc[One-hour Payments and fleet session]
 * xref:appendix-setup.adoc[Environment setup]
 * xref:module-00-architecture.adoc[Module 0: Architecture and ownership]
 * xref:module-01-fleet.adoc[Module 1: Discover the fleet]

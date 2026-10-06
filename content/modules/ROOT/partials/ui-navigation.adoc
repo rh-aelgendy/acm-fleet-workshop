@@ -4,3 +4,7 @@ For a spoke resource, follow *ACM → Infrastructure → Clusters → cluster �
 Argo CD handles sync and resource trees; ACM supplies fleet context. Menu wording varies with installed plugins.
 
 IMPORTANT: Private APIs and ingress require browser/controller network access. An ACM login alone does not provide it. Use indexed resource details when the managed console is unreachable; do not claim an unapplied change succeeded.
+
+Open Argo CD through *hub console → Networking → Routes → {gitops-namespace} → openshift-gitops-server → Location*. The presenter fleet’s ACM Applications list exposes View/Edit/Search/Delete; do not assume it has Sync or an Argo link. ApplicationSet rows and generated Application names differ. Use Search for `kind:Application namespace:{gitops-namespace}` or the signed-in Argo list.
+
+For PlacementDecision, match `metadata.labels.cluster.open-cluster-management.io/placement` to the intended Placement and inspect all matching shards. Objects live on the hub; `status.decisions` names the target clusters.

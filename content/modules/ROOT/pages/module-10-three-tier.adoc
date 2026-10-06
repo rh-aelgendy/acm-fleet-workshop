@@ -83,7 +83,7 @@ Return to **ACM → Applications**, find `retail-orders`, and follow its **Argo 
 
 **Say:** “The hub controller reads a public Git source and pushes the desired resources to its configured destination. The source remains available even though our facilitator repository is private.”
 
-**Expected:** Application visible, initially OutOfSync/Missing. **Value:** Central application inventory with GitOps execution. **Fallback:** Inspect Application conditions in hub API Explorer. This YAML path is the reliable creation method; it does not depend on an ACM release exposing a particular creation wizard.
+**Expected:** Application visible, initially OutOfSync/Missing. **Value:** Central application inventory with GitOps execution. **Fallback:** Inspect Application conditions through ACM Search (`kind:Application namespace:{gitops-namespace} name:retail-orders`). This YAML path is the reliable creation method; it does not depend on an ACM release exposing a particular creation wizard.
 
 == 4. Synchronize and read the resource tree
 

@@ -38,7 +38,7 @@ From the hub console, open **Networking → Routes → project `acm-demo-gateway
 
 . In **ACM → Infrastructure → Clusters → {destination-cluster} → Labels**, set `demo.acm.example.com/mobility=true`.
 . Open **ACM → Search** and enter `kind:PlacementDecision namespace:{gitops-namespace}`. Select a result belonging to the **hub**, open its resource details/YAML, and check the label `cluster.open-cluster-management.io/placement: retail-mobility`. Read `status.decisions` across the matching objects and confirm both clusters are selected. The namespace is a search filter, not a navigation page. Do not edit the generated PlacementDecision.
-. Open **ACM → Applications → retail-mobility-{destination-cluster} → Argo CD**. Inspect source `retail/overlays/mobility` and destination namespace `acm-demo-mobility`.
+. Open **ACM Search → `kind:Application namespace:{gitops-namespace}`**, finding `retail-mobility-{destination-cluster}`; open the GitOps Route described in xref:module-03-gitops.adoc[GitOps placement] and select that Application. Inspect source `retail/overlays/mobility` and destination namespace `acm-demo-mobility`.
 . Choose **Sync → Synchronize**, prune disabled. Wait for Synced / Healthy and inspect storefront, catalog and order-quote.
 . Return to **ACM → Governance**. Confirm `namespace-baseline` and `production-workload-standards` are Compliant for the spoke.
 
